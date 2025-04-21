@@ -1,6 +1,4 @@
-# practice-vue3
-
-#250421 공부 내용 2.1 DOM ~ 2.7 v-model
+# 250421 공부 내용 2.1 DOM ~ 2.7 v-model
 
 ## 2.1 DOM
 
