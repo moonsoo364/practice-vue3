@@ -1,62 +1,54 @@
-//2-5 Component Data
+//2-11 v-for
 import { createApp } from 'vue'
 
-// input 예제 1
-// const NameInput = {
-//   template: `
-//   <label for="name">
-//   Write your name:
-//     <input
-//      v-model="name"
-//      placeholder="Enter your name"
-//      id="name"
-//     />
-//   </label>
+
+// const List = {
+//   template:`
+//   <ul>
+//     <li v-for="number in numbers" :key="number">{{number}}</li>
+//     </url>
 //   `,
-//   data() {
+//   data(){
 //     return {
-//       name: '',
+//       numbers: [1, 2, 3, 4, 5],
 //     }
-//   },
+//   }
 // }
 // const app = createApp({
-//   components: {
-//     NameInput,
-//   },
-//   template: `<NameInput/>`,
+//   components: {List},
+//   template: `<List/>`,
 // })
 // app.mount('#app')
 
-//checklist  예제
-const CourseChecklist = {
-  template: `
-		<div>The course checklist: {{list.join(', ')}}</div>
-    <div>
-      <label for="chapter1">
-        <input type="checkbox" id="chapter1" value="chapter1" v-model="list"/>
-        Chapter 1
-      </label>
-      <label for="chapter2">
-        <input type="checkbox" id="chapter2" value="chapter2" v-model="list"/>
-        Chapter 2
-      </label>
-      <label for="chapter3">
-        <input type="checkbox" id="chapter3" value="chapter3" v-model="list"/>
-        Chapter 3
-      </label>
-    </div>
-	`,
-  data() {
-    return {
-      list: [],
-    }
-  },
-}
+//2.11 v-for with objects
+// const List = {
+//   template: `
+//   <ul>
+//     <li v-for="(task, index) in tasks" :key="task.id">
+//     {{title}} {{index}}: {{task.description}}
+//     </li>
+//   </ul>
+//   `,
+//   data(){
+//     return {
+//       tasks:[
+//         {id:'task01', description:'Buy Groceries'},
+//         {id:'task02', description:'Do laundry'},
+//         {id:'task03', description:'Watch Moonknight'}
+//       ],
+//       title: 'Task',
+//     }
+//   }
+// }
+// const app = createApp({
+//   components: {List},
+//   template: `<List/>`,
+// })
+// app.mount('#app')
+//
 
 const app = createApp({
-  components: {
-    CourseChecklist,
-  },
-  template: `<CourseChecklist/>`,
+  components: {List},
+  template: `<List/>`,
 })
 app.mount('#app')
