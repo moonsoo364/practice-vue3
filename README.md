@@ -284,3 +284,34 @@ const App = {
 const app = createApp(App)
 app.mount('#app')
 ```
+
+키 코드를 수정자를 이용하여 Ctrl + Enter 또는 Shift + S와 같은  특수 키 조합을 감지할 수 있다. 이러한 시나리오에서 시스템 키 수정자 .shift, .ctrl, .alt등과 키 코드 수정자를 이어서 사용한다.
+
+키 조작을 엄밀하게 판단해 이벤트를 발동하려면 .exact 수정자를 사용한다. .shift와 .exact가 결합되어 있어 사용자가 오직 shift 키만 누른 상태에서 클릭해야만 이벤트가 실행된다.
+
+```jsx
+import { createApp, type ComponentOptions } from 'vue'
+
+const App = {
+  template : `
+    <div> 1.enter <input @keydown.enter="onEnter"/></div>
+    <div> 2.ctrl + enter<input @keydown.ctrl.enter="onEnter"/></div>
+    <div> 3.<button @click.shift.extract="onShiftClick">shift+ click</button></div>
+    
+  `,
+  methods:{
+    onEnter(e: KeyboardEvent){
+        console.log('Enter key pressed')
+    },
+    onCtrlEntter(e: KeyboardEvent){
+      console.log('Ctrl + Enter key pressed')
+    },
+    onShiftClick(e: KeyboardEvent){
+      console.log('Shift + Click key pressed')
+    },
+  },
+  
+}
+const app = createApp(App)
+app.mount('#app')
+```
