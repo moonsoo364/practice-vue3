@@ -223,7 +223,7 @@ const app = createApp(App)
 app.mount('#app')
 ```
 
-### 2.12.1 v-on 이벤트 수정자를 이용한 이벤트 처리
+## 2.12.1 v-on 이벤트 수정자를 이용한 이벤트 처리
 
 브라우저는 대상 엘리먼트에 이벤트를 전달하기에 앞서 현재 DOM 트리 구조를 바탕으로 해당 이벤트의 전파 경로 목록을 구성한다. 이 경로의 마지막 노드는 대상 자체이고, 이전 경로는 차례로 상위 엘리먼트가 나열된다.
 
@@ -312,6 +312,192 @@ const App = {
   },
   
 }
+const app = createApp(App)
+app.mount('#app')
+```
+# 250423 2.13 v-if ~ 2.17 v-memo
+
+## 2.13 v-if 를 이용한 조건부 렌더링
+Conditional Redering을 이용하면 Dom에서 엘리먼트를 생성하거나 제거할 수 있다.
+if…else 논리 표현식으로 if, else, else if 조건 블록을 Vue에서 생성할 수 있다. 
+
+```jsx
+import { createApp } from 'vue'
+
+const App = {
+  template : `
+  <span> 
+    <div v-if="isVisible">I'm the visible text</div>
+    <div v-else-if="showSubstile">I'm the subtitle text</div>
+    <div v-else>I'm the invisible text</div>
+  </span>
+  `,
+  data(){
+    return {
+      isVisible: false,
+      showSubstile: false,
+    }
+  }
+  
+}
+const app = createApp(App)
+app.mount('#app')
+```
+
+## 2.14 v-show를 이용한 조건부 표시
+v-if와 달리 v-show는 대상 엘리먼트의 가시성만 전환된다. Vue는 조건 판단 결과와 관계없이 대상 엘리먼트를 렌더링한다. 
+렌더링 이후 Vue는 조건 판단 결과에 따라 CSS의 display규칙을 이용해 엘리먼트를 숨기거나 표시하는 방식으로 가시성을 제어한다.
+
+```jsx
+//2-14 v-show
+import { createApp } from 'vue'
+
+const App = {
+  template : `
+  <span> 
+    <div v-show="isVisible">I'm the text in toggle</div>
+    <div>Visablility : {{isVisible}}</div>
+  </span>
+  `,
+  data(){
+    return {
+      isVisible: false
+    }
+  }
+  
+}
+const app = createApp(App)
+app.mount('#app')
+```
+## 2.15 html을 이용한 동적 HTML 표시
+
+v-html을 이용해 이용해 일반 HTML 코드를 문자열 형태로 DOM에 동적으로 주입한다.
+
+```jsx
+//2-15 v-html
+import { createApp } from 'vue'
+
+const App = {
+  template : `
+    <div v-html="innerHtml"/>
+  `,
+  data(){
+    return {
+      innerHtml: '<h1>This is the app\'s entrance</h1><h2>We are exploring template syntax</h2>'
+    }
+  }
+  
+}
+const app = createApp(App)
+app.mount('#app')
+```
+
+Vue 엔진은 디렉티브값을 정적 HTML 코드 형태로 분석하고 div 엘리먼트의 innerHTML 프로퍼티에 배치한다. 
+
+### v-html의 보안
+
+v-html은 오직 신뢰할 수 있는 컨텐츠 렌더링 또는 서버 측 렌더링에만 사용에만 사용해야 한다. 또한 유효한 HTML 문자열이라도 script태그를 포함할 수 있으며 브라우저가 이 태그 속의 코드를 실행하면 잠재적인 보안 위협을 초래할 수 있다.
+
+## 2.16 v-text를 이용한 텍스트 표시
+v-text는 이중 중괄호처럼 엘리먼트 컨텐츠로 데이터를 주입하는 디렉티브이다. 그러나 {{}}와 달리 변경 사항이 있어도 렌더링된 텍스트를 업데이트하지 않는다.
+
+아래 예시는 텍스트를 미리 정의한 다음 컴포넌트 로드가 완료된 후 한 번만 교체하려 할 때 유용하다.
+
+```jsx
+//2-16 v-text
+import { createApp } from 'vue'
+
+const App = {
+  template : `
+    <div v-text="text">PlaceHoder</div>
+  `,
+  data(){
+    return {
+      text: 'Hello World'
+    }
+  }
+  
+}
+const app = createApp(App)
+app.mount('#app')
+```
+## 2-17 v-once 및 v-memo를 이용한 렌더링 최적화
+v-once는 정적 콘텐츠를 렌더링할 때 유용하다. 정적 엘리먼트를 재차 렌더링하지 않도록 방지함으로써 성능을 보존한다. Vue는 이 디렉티브가 사용된 엘리먼트를 요소를 한 번만 렌더링하며 어떠한 렌더링이 발생해도 업데이트하지 않는다.
+
+아래 예시에서 Vue는 name이 담긴 div 태그를 한 번만 렌더링한다.
+input 필드와 v-model을 통해 사용자가 name을 변경하더라도 div의 값은 업데이트 되지 않는다.
+```jsx
+//2-17 v-once 및 v-memo를 이용한 렌더링 최적화
+import { createApp } from 'vue'
+
+const App = {
+  template : `
+    <div>
+      <input v-model="name" placeholder="Enter your name">
+    </div>
+    <div v-once>{{name}}</div>
+  `,
+  data(){
+    return {
+      name: 'My Name is..'
+    }
+  }
+  
+}
+const app = createApp(App)
+app.mount('#app')
+```
+
+v-memo는 자바스크립트 조건 표현식이 담긴 배열을 받아 렌더링을 제어하려는 부분의 최상위 엘리먼트에 탑재한다. Vue는 이러한 조건식의 유효성을 검사하고 해당 조건의 판단 결과가 이전과 달라졌을 때만 대상 엘리먼트 블록을 다시 렌더링한다. 
+아래 예제에서 선택된 고양이 사진만 테두리가 적용되고 이전 선택된 사진은 테두리가 해제된다 두 가지 엘리먼트의 상태만 v-memo로 변경한다.  
+```jsx
+//2-17 v-once 및 v-memo를 이용한 렌더링 최적화
+import { createApp } from 'vue'
+
+const mainUrl = 'https://res.cloudinary.com/mayashavin/image/upload/w_100,h_100,c_thumb/'
+const App ={
+  template:`
+    <ul>
+      <li
+        v-for="image in images"
+        :key="image.id"
+        @click="selected = image.id"
+        :style="selected === image.id ? {border: '1px solid blue'} : {}"
+        v-memo="[selected === image.id]">
+          <img :src="image.url" :alt="image.title"/>
+          <div>{{image.title}}</div>
+        </li>
+      </ul>
+  `,
+  data() {
+    return {
+      selected : null,
+      images: [
+        {
+          id: 1,
+          title: 'Cute Cat',
+          url: mainUrl+'TheCute%20Cat',
+        },
+        {
+          id: 2,
+          title: 'Cute Cat no 2',
+          url: mainUrl+'cute_cat',
+        },
+        {
+          id: 3,
+          title: 'Cute Cat no 3',
+          url: mainUrl+'cat_me',
+        },
+        {
+          id: 4,
+          title: 'Just Cat',
+          url: mainUrl+'cat_1',
+        },
+      ]
+    }
+  }
+}
+
 const app = createApp(App)
 app.mount('#app')
 ```

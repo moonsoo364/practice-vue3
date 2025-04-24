@@ -1,37 +1,16 @@
-//2-13 v-if
+//2-14 v-show
 import { createApp } from 'vue'
-
-// const App = {
-//   template : `
-//   <span> 
-//     <div v-if="isVisible">I'm the visible test</div>
-//     <div v-else>I'm the invisible test</div>
-//   </span>
-//   `,
-//   data(){
-//     return {
-//       isVisible: true,
-//     }
-//   }
-  
-// }
-// const app = createApp(App)
-// app.mount('#app')
-
-//2-13 v-else-if
 
 const App = {
   template : `
   <span> 
-    <div v-if="isVisible">I'm the visible text</div>
-    <div v-else-if="showSubstile">I'm the subtitle text</div>
-    <div v-else>I'm the invisible text</div>
+    <div v-show="isVisible">I'm the text in toggle</div>
+    <div>Visablility : {{isVisible}}</div>
   </span>
   `,
   data(){
     return {
-      isVisible: false,
-      showSubstile: false,
+      isVisible: false
     }
   }
   
