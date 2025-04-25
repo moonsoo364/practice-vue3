@@ -11,6 +11,7 @@ import { createApp } from 'vue'
 //SFC파일
 import MyComponent from './components/do/MyComponent.vue';
 
+
 // import './assets/main.css'
 //원본 코드
 import { createPinia } from 'pinia'

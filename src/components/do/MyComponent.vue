@@ -3,8 +3,12 @@
 </template>
 
 <script lang="ts">
-export default{
-    name: "MyFirstComponent",
-}
+import { defineComponent, h } from 'vue';
+
+export default defineComponent({
+    setup() {
+        const message = 'Welcome to Vue 3';
+        return () => h('div', message);
+    },
+})
 </script>
-Script
