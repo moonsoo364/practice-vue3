@@ -573,8 +573,10 @@ export default{
 .vue 파일 형식은 고유한 확장 표준이므로 Webpack과 같은 빌드도구로 사전 컴파일해야한다. 컴파일 결과 .vue 파일은 브라우저가 처리할 수 있는 자바스크립트 및 CSS로 변환된다. Vite로 새 프로젝트를 생성하면 스캐폴딩 과정에서 이미 빌드 도구가 설정된다. 따라서 컴포넌트를 ES 모듈로 임포트하거나 다른 컴포넌트 파일 내부에서 Components로 선언 할 수 있다.
 
 # 250428 3.2 타입 스크립트 지원 ~ 3.3 컴포넌트 라이프사이클 훅
+
 ## 3.2 defineComponent()와 타입 스크립트 지원
-defineComponent() 메서드는 설정 객체를 입력받는 래퍼 함수다. 반환 결과는 같지만 타입 추론(inference)를 거쳐 컴포넌트를 정의한다. 
+
+defineComponent() 메서드는 설정 객체를 입력받는 래퍼 함수다. 반환 결과는 같지만 타입 추론(inference)를 거쳐 컴포넌트를 정의한다.
 
 defineComponent() 는 Vue3.x 이상에서 사용할 수 있으며 타입 스크립트와 관련된 역할만 한다.
 
@@ -597,7 +599,7 @@ export default defineComponent({
 
 ```
 
-defineComponent()는 가급적 복잡한 컴포넌트를 다룰 때만 사용하도록 한다. this 인스턴스로 컴포넌트 프로퍼티를 조작하는 경우가 대표적이다.  간단한 컴포넌트는 표준 메서드만으로 SFC 컴포넌트를 저으이해도 무방하다.
+defineComponent()는 가급적 복잡한 컴포넌트를 다룰 때만 사용하도록 한다. this 인스턴스로 컴포넌트 프로퍼티를 조작하는 경우가 대표적이다. 간단한 컴포넌트는 표준 메서드만으로 SFC 컴포넌트를 저으이해도 무방하다.
 
 ## 3.3 컴포넌트 라이프사이클 훅
 
@@ -606,23 +608,24 @@ Vue 컴포넌트의 라이프사이클은 Vue가 컴포넌트를 인스턴스화
 전체 라이프사이클은 여러 단계로 나뉜다.
 
 - initialize phase : Vue 렌더러가 컴포넌트 옵션 설정을 로드하고 인스턴스 생성을 준비한다.
-first render phase : Vue 렌더러가 컴포넌트용 DOM을 생성하고 DOM 트리에 삽입한다.
+  first render phase : Vue 렌더러가 컴포넌트용 DOM을 생성하고 DOM 트리에 삽입한다.
 
-- mounting phase : 컴포넌트에 속한 엘리먼트는 Dom 트리에 마운트 및 연결되어 있다. Vue 렌더러는 이 컴포넌트를 부모 컨테이너에 연결한다. 이 페이즈부터 컴포넌트의 Dom 노드를 `$el` 프로퍼티에 접근할 수 있다. 
+- mounting phase : 컴포넌트에 속한 엘리먼트는 Dom 트리에 마운트 및 연결되어 있다. Vue 렌더러는 이 컴포넌트를 부모 컨테이너에 연결한다. 이 페이즈부터 컴포넌트의 Dom 노드를 `$el` 프로퍼티에 접근할 수 있다.
 
 - updating phase : 이 페이즈는 컴포넌트의 반응형 데이터가 변경될 때만 수행된다. Vue 렌더러는 변경된 데이터로 컴포넌트 Dom 노드를 다시 렌더링하고 패치 업데이트를 수행한다. 마운팅 페이즈와 마찬가지로 업데이트도 자식 엘리먼트부터 적용하기 시작해 컴포넌트 본체에서 완료된다.
 
 - unmounting phase : Vue 렌더러가 Dom에서 컴포넌트를 분리하고 인스턴스와 모든 반응형 데이터를 제거한다. 마지막 단계로 애플리케이션에서 컴포넌트가 더이상 사용되지 않을 때 발생한다. 컴포넌트는 모든 자식 요소가 언마운팅되고 나서야 자신을 언마운팅할 수 있다.
 
 ### 3.3.1 setup
+
 setup은 컴포넌트 라이프사이클이 시작되기 전에 발생하는 첫 이벤트 훅이다. 이 훅은 Vue가 컴포넌트를 인스턴스화하기 직전에 한 번 실행된다. 이 때는 아직 컴포넌트 인스턴스가 존재하지 않으므로 this에 접근할 수 없다.
 
 ```jsx
-export default{
-	setup(){
-		console.log('setup hoook')
-		console.log(this) // undefined
-	}
+export default {
+  setup() {
+    console.log('setup hoook')
+    console.log(this) // undefined
+  },
 }
 ```
 
@@ -632,7 +635,7 @@ beforeCreate는 Vue 렌더러가 컴포넌트 인스턴스를 생성하기 전�
 
 ### 3.3.3 created
 
-created 훅은 Vue 엔진이 컴포넌트 인스턴스를 생성한 이후에 실행된다. 컴포넌트 인스턴스와 반응형 데이터, 와쳐, computed 프로퍼티, 메서드 정의 등이 존재하는 단계다.  그러나 Vue엔진은 아직 컴포넌트 인스턴스를 DOM에 마운팅하지 않았다.
+created 훅은 Vue 엔진이 컴포넌트 인스턴스를 생성한 이후에 실행된다. 컴포넌트 인스턴스와 반응형 데이터, 와쳐, computed 프로퍼티, 메서드 정의 등이 존재하는 단계다. 그러나 Vue엔진은 아직 컴포넌트 인스턴스를 DOM에 마운팅하지 않았다.
 created 혹은 컴포넌트의 최초 렌더링 이전에 실행된다. 외부 리소스에서 컴포넌트로 데이터를 로드할 때처럼 this가 필요한 작업을 실행하는 단계다.
 
 ### 3.3.4 beforeMount
@@ -665,3 +668,244 @@ beforeUnmount 혹은 Vue 렌더러가 컴포넌트를 언마운팅하기 전에 
 ### 3.3.9 unmounted
 
 unmounted 훅은 언마운트 프로세스가 정상적으로 완료되고 컴포넌트 인스턴스를 사용할 수 없게 된 이후로 실행된다. DOM 이벤트 리스너 등의 부가 옵저버 효과를 이 훅에서 정리할 수 있다.
+
+# 250428 3.4 메서드 ~ 3.6 watcher 프로퍼티
+
+메서드 로직은 일반적으로 컴포넌트 데이터에 의존하지 않도록 작성한다. 그러나 this 인스턴스를 사용하면 메서드 내부에서 컴포넌트의 로컬 상태에 접근할 수는 있다. 컴포넌트 메서드는 methods 프로퍼티에 함수 형태로 정의한다. message 프로퍼티를 역순으로 바꾸는 메서드 정의 예시다.
+
+```jsx
+<template>
+ <h2 class="heading">I am {{ reversedMessage() }}</h2>
+ <input v-model="message" type="text" placeholder="Enter your name"/>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+export default defineComponent({
+  name: 'ReversedMessage',
+  data() {
+    return {
+      message: '',
+    }
+  },
+  methods:{
+    reversedMessage():string {
+      return this.message.split('').reverse().join('');
+    }
+  }
+
+})
+</script>
+
+```
+
+또한 컴포넌트 메서드는 this 인스턴스를 통해 다른 프로퍼티 또는 라이프사이클 훅 내부에서 실행할 수 있다. 예를 들어 다음 코드는 reverseMessage를 작게 나누어 reverse()와 arrToString() 이라는 두 메서드를 추가한다.
+
+```jsx
+<template>
+ <h2 class="heading">I am {{ reversedMessage(message) }}</h2>
+ <input v-model="message" type="text" placeholder="Enter your name"/>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+export default defineComponent({
+  name: 'ReversedMessage',
+  data() {
+    return {
+      message: '',
+    }
+  },
+  methods:{
+    reverse(message: string):string[]{
+      return message.split('').reverse()
+    },
+    arrToString(arr: string[]):string{
+      return arr.join('')
+    },
+    reversedMessage(message : string):string {
+      return this.arrToString(this.reverse(message))
+    }
+  }
+
+})
+</script>
+
+```
+
+메서드를 잘 쓰면 컴포넌트를 체계적으로 유지할 수 있다. Vue는 필요한 경우에만 메서드를 실행하며 그때마다 로컬 데이터를 이용해 새로운 데이터를 동적으로 계산할 수 있다. 템플릿 내부에서 메서드를 호출하는 위 예제가 이런 예시이다. 그러나 Vue는 메서드 실행 결과를 캐시로 저장하지 않으며 매번 렌더링할 때 마다 새로 실행한다. 따라서 계산된 데이터가 필요할 때는 computed 프로퍼티를 사용하는 것이 낫다.
+
+## 3.5 computed 프로퍼티
+
+computed 프로퍼티는 Vue의 고유 기능이며 컴포넌트의 기존 반응형 데이터를 이용해 새로운 반응형 데이터 프로퍼티를 계산하는 역할을 한다. computed 프로퍼티 필드 내부에 나열된 함수는 각각의 계산값을 반환한다.
+
+```jsx
+<template>
+ <h2 class="heading">I am {{ reversedMessage }}</h2>
+ <input v-model="message" type="text" placeholder="Enter your name"/>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+export default defineComponent({
+  name: 'ReversedMessage',
+  data() {
+    return {
+      message: '',
+    }
+  },
+  computed:{
+    reversedMessage(){
+      return this.message.split('').reverse().join('')
+    }
+  },
+
+
+})
+</script>
+
+```
+
+컴포넌트 로직에서 this 인스턴스를 통해 computed 프로퍼티에 접근할 수 있다. 로컬 데이터 프로퍼티와 동일한 접근 방식이다. 또한 기존 computed 프로퍼티값을 이용해 또 다른 computed를 계산하는 것도 가능하다.
+
+```jsx
+<template>
+  <h2 class="heading">I am {{ reversedMessage }}</h2>
+  <h2 class="heading">length : {{ reverseMessageLength }}</h2>
+  <input v-model="message" type="text" placeholder="Enter your name" />
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+export default defineComponent({
+  name: 'ReversedMessage',
+  data() {
+    return {
+      message: '',
+    }
+  },
+  computed: {
+    reversedMessage() {
+      return this.message.split('').reverse().join('')
+    },
+    reverseMessageLength() {
+      return this.reversedMessage.length
+    },
+  },
+})
+</script>
+
+```
+
+Vue 엔진은 computed 프로퍼티의 값을 자동으로 캐시에 저장하고 해당 프로퍼티와 관련된 반응형 데이터가 변경될 때만 값을 다시 계산한다.
+computed 프로퍼티를 잘 쓰면 복잡한 데이터 조작 과정을 재사용 가능한 데이터 블록으로 구성할 수 있다. 따라서 코드는 줄고 정돈되며 컴포넌트 성능은 향상된다. 또한 computed 프로퍼티 함수 로직에 포함된 반응형 데이터는 자동으로 와처 설정되는 효과를 얻는다.
+
+그러나 이러한 자동 와처 메커니즘은 특정 상황에서 컴포넌트 성능 유지 목적으로 오버헤드를 발생시킬 우려가 있다. 이럴 경우에는 watch 프로퍼티 필드를 통해 직접 와처를 설정하는 것이 좋다.
+
+## 3.6 와처
+
+와처는 컴포넌트의 반응형 데이터 프로퍼티 변화를 프로그램 방식으로 관찰하고 처리하는 기능이다. 각 와처는 하나의 함수이며 newValue와 oldValue라는 두 인수를 전달 받는다. 전자는 관찰 데이터의 새로운 값 후자는 기존값을 나타낸다. 반응형 데이터에 와처를 정의하려면 다음과 같이 watch 프로퍼티 필드에 함수를 추가한다.
+
+```jsx
+<template>
+  <input v-model="message" type="text" placeholder="Enter your name" />
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+export default defineComponent({
+  name: 'ReversedMessage',
+  data() {
+    return {
+      message: '',
+    }
+  },
+  watch: {
+    message(newValue: string, oldValue: string) {
+      console.log(`new Value : ${newValue}, old Value : ${oldValue}`)
+    },
+  },
+})
+</script>
+
+```
+
+한편 와처의 작동 방식을 직접 설정하고 이를 객체에 담아 와처 이름에 전달하는 방법도 있다.
+
+| 필드      | 설명                                                               | 타입      | 기본값 | 필수   |
+| --------- | ------------------------------------------------------------------ | --------- | ------ | ------ |
+| handler   | 대상 데이터 값이 변경될 때 실행되는 콜백 함수                      | function  | N/A    | 예     |
+| deep      | 대상 데이터의 하위 프로퍼티 변화 관찰여부                          | boolean   | false  | 아니요 |
+| immediate | 컴포넌트 마운트 이후 핸들러 즉시 실행 여부                         | boolean   | false  | 아니요 |
+| flush     | 핸들러 실행 시점 , Vue는 컴포넌트 업데이트 전에 핸들러를 실행한다. | pre, post | pre    | 아니요 |
+
+### 3.6.1 하위 프로퍼티 변화 관찰
+
+deep 옵션 필드를 설정하면 하위 프로퍼티의 변화를 관찰할 수 있다.
+
+```jsx
+<template>
+  <div>
+    <div>
+      <label for="name"
+        >Name:
+        <input v-model="user.name" placeholder="Enter Your name" id="name" />
+      </label>
+    </div>
+    <div>
+      <label for="age"
+        >Age:
+        <input type="number" v-model="user.age" placeholder="Enter your age" id="age" />
+      </label>
+    </div>
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+type User = {
+  name: string
+  age: number
+}
+export default defineComponent({
+  name: 'userWatcherComponent',
+  data(): { user: User } {
+    return {
+      user: {
+        name: 'John',
+        age: 30,
+      },
+    }
+  },
+  watch: {
+    user: {
+      handler(newValue: User, oldValue: User) {
+        console.log({ newValue, oldValue })
+      },
+      deep: true,
+    },
+  },
+})
+</script>
+
+```
+
+Vue 엔진은 user.name 또는 user.age 값이 변경될 때 마다 user 와처를 실행한다. 아래는 user.name 값을 변경했을 때 user 와처가 출력하는 콘솔 로그 화면이다.
+
+```jsx
+{newValue: Proxy(Object), oldValue: Proxy(Object)}
+newValue
+:
+Proxy(Object) {name: 'moons', age: 300}
+oldValue
+:
+Proxy(Object) {name: 'moons', age: 300}
+[[Prototype]]
+:
+Object
+```
+
+출력 결과를 보면 user의 newValue와 oldValue가 같다. 그 이유는 user라는 인스턴스 자체는 업데이트에 관계없이 동일한 대상이기 때문이다. 변경사항은 name 필드의 값일 뿐이다.
+
+또한 deep 플래그를 켜면 Vue엔진은 user 객체의 모든 프로퍼티와 하위 프로퍼티를 순회하며 변화를 관찰한다. 따라서 user 객체 내부 데이터 구조가 과하게 복잡할 경우 성능에 지장을 줄 우려가 있다. 이럴 때는 모니터링 대상 프로퍼티를 명확히 지정하는 것이 좋다.

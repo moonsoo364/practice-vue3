@@ -17,15 +17,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-// type User = {
-//   name: string
-//   age: number
-//   address:{
-//     street: string
-//     country: string
-//     zip: string
-//   }
-// }
+
 type User = {
   name: string
   age: number
