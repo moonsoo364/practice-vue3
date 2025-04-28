@@ -1,14 +1,23 @@
 <template>
-    <h2 class="heading">I am a Vue Component</h2>
+ <h2 class="heading">I am {{ reversedMessage }}</h2>
+ <input v-model="message" type="text" placeholder="Enter your name"/>
 </template>
 
 <script lang="ts">
-import { defineComponent, h } from 'vue';
-
+import { defineComponent } from 'vue'
 export default defineComponent({
-    setup() {
-        const message = 'Welcome to Vue 3';
-        return () => h('div', message);
-    },
+  name: 'ReversedMessage',
+  data() {
+    return {
+      message: '',
+    }
+  },
+  computed:{
+    reversedMessage(){
+      return this.message.split('').reverse().join('')
+    }
+  },
+
+  
 })
 </script>

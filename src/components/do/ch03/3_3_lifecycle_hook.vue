@@ -27,6 +27,16 @@ export default defineComponent({
   },
   mounted() {
     console.log('mounted hook triggered');
+  },
+  beforeUpdate() {
+    console.log('beforeUpdate hook triggered!')
+  },
+  updated() {
+   console.log('updated hook triggered') 
   }
+  ,
+  beforeUnmount() {
+    console.log('beforeUnmount hook triggered!')
+  },
 })
 </script>
