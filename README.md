@@ -571,3 +571,97 @@ export default{
 ```
 
 .vue 파일 형식은 고유한 확장 표준이므로 Webpack과 같은 빌드도구로 사전 컴파일해야한다. 컴파일 결과 .vue 파일은 브라우저가 처리할 수 있는 자바스크립트 및 CSS로 변환된다. Vite로 새 프로젝트를 생성하면 스캐폴딩 과정에서 이미 빌드 도구가 설정된다. 따라서 컴포넌트를 ES 모듈로 임포트하거나 다른 컴포넌트 파일 내부에서 Components로 선언 할 수 있다.
+
+# 250428 3.2 타입 스크립트 지원 ~ 3.3 컴포넌트 라이프사이클 훅
+## 3.2 defineComponent()와 타입 스크립트 지원
+defineComponent() 메서드는 설정 객체를 입력받는 래퍼 함수다. 반환 결과는 같지만 타입 추론(inference)를 거쳐 컴포넌트를 정의한다. 
+
+defineComponent() 는 Vue3.x 이상에서 사용할 수 있으며 타입 스크립트와 관련된 역할만 한다.
+
+```jsx
+<template>
+  <h2 class="heading">{{ message }}</h2>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+export default defineComponent({
+  name: 'MyMessageComponent',
+  data() {
+    return {
+      message: 'Welcome to Vue 3!',
+    }
+  },
+})
+</script>
+
+```
+
+defineComponent()는 가급적 복잡한 컴포넌트를 다룰 때만 사용하도록 한다. this 인스턴스로 컴포넌트 프로퍼티를 조작하는 경우가 대표적이다.  간단한 컴포넌트는 표준 메서드만으로 SFC 컴포넌트를 저으이해도 무방하다.
+
+## 3.3 컴포넌트 라이프사이클 훅
+
+Vue 컴포넌트의 라이프사이클은 Vue가 컴포넌트를 인스턴스화할 때 시작되고 인스턴스를 삭제할 때 끝난다.
+
+전체 라이프사이클은 여러 단계로 나뉜다.
+
+- initialize phase : Vue 렌더러가 컴포넌트 옵션 설정을 로드하고 인스턴스 생성을 준비한다.
+first render phase : Vue 렌더러가 컴포넌트용 DOM을 생성하고 DOM 트리에 삽입한다.
+
+- mounting phase : 컴포넌트에 속한 엘리먼트는 Dom 트리에 마운트 및 연결되어 있다. Vue 렌더러는 이 컴포넌트를 부모 컨테이너에 연결한다. 이 페이즈부터 컴포넌트의 Dom 노드를 `$el` 프로퍼티에 접근할 수 있다. 
+
+- updating phase : 이 페이즈는 컴포넌트의 반응형 데이터가 변경될 때만 수행된다. Vue 렌더러는 변경된 데이터로 컴포넌트 Dom 노드를 다시 렌더링하고 패치 업데이트를 수행한다. 마운팅 페이즈와 마찬가지로 업데이트도 자식 엘리먼트부터 적용하기 시작해 컴포넌트 본체에서 완료된다.
+
+- unmounting phase : Vue 렌더러가 Dom에서 컴포넌트를 분리하고 인스턴스와 모든 반응형 데이터를 제거한다. 마지막 단계로 애플리케이션에서 컴포넌트가 더이상 사용되지 않을 때 발생한다. 컴포넌트는 모든 자식 요소가 언마운팅되고 나서야 자신을 언마운팅할 수 있다.
+
+### 3.3.1 setup
+setup은 컴포넌트 라이프사이클이 시작되기 전에 발생하는 첫 이벤트 훅이다. 이 훅은 Vue가 컴포넌트를 인스턴스화하기 직전에 한 번 실행된다. 이 때는 아직 컴포넌트 인스턴스가 존재하지 않으므로 this에 접근할 수 없다.
+
+```jsx
+export default{
+	setup(){
+		console.log('setup hoook')
+		console.log(this) // undefined
+	}
+}
+```
+
+### 3.3.2 beforeCreate
+
+beforeCreate는 Vue 렌더러가 컴포넌트 인스턴스를 생성하기 전에 실행한다. 이때 Vue엔진 컴포넌트를 초기화했지만 아직 data() 함수를 실행하거나 computed 속성을 계산하지 않은 상태다. 따라서 반응형 데이터를 아직 사용할 수 없다.
+
+### 3.3.3 created
+
+created 훅은 Vue 엔진이 컴포넌트 인스턴스를 생성한 이후에 실행된다. 컴포넌트 인스턴스와 반응형 데이터, 와쳐, computed 프로퍼티, 메서드 정의 등이 존재하는 단계다.  그러나 Vue엔진은 아직 컴포넌트 인스턴스를 DOM에 마운팅하지 않았다.
+created 혹은 컴포넌트의 최초 렌더링 이전에 실행된다. 외부 리소스에서 컴포넌트로 데이터를 로드할 때처럼 this가 필요한 작업을 실행하는 단계다.
+
+### 3.3.4 beforeMount
+
+beforeMount 훅은 created 다음에 실행된다. 이 시점에 Vue는 컴포넌트 인스턴스를 생성하고 최초 렌더링에 사용할 템플릿 컴파일을 마친다.
+
+### 3.3.5 mounted
+
+mounted 훅은 컴포넌트의 최초 렌더링 다음에 실행된다. 이 페이즈가 되면 $el 프로퍼티를 통해 컴포넌트가 렌더링한 DOM 노드에 엑세스할 수 있다. 컴포넌트의 DOM 노드를 이용해 부차적인 계산을 해야하는 경우 이 훅에서 처리한다.
+
+### 3.3.6 beforeUpdate
+
+Vue 렌더러는 로컬 데이터 상태가 변경될 때마다 컴포넌트의 Dom 트리를 업데이트한다.
+beforeUpdate 훅은 업데이트 프로세스가 시작되기 이전에 실행되므로 아직까지 컴포넌트의 상태를 내부적으로 수정할 수 있다.
+
+### 3.3.7 updated
+
+updated 훅은 Vue 렌더러가 컴포넌트 DOM 트리를 업데이트한 다음 실행된다.
+
+- updated, beforeUpdate, beforeMount, mounted 혹은 SSR에서 사용할 수 없다.
+
+이 훅은 DOM이 조금이라도 업데이트되면 무조건 실행되므로 주의해서 사용해야 한다.
+
+- updated 훅 내부에서 컴포넌트의 로컬 데이터 사앹를 변경하면 안된다.
+
+### 3.3.8 beforeUnmount
+
+beforeUnmount 혹은 Vue 렌더러가 컴포넌트를 언마운팅하기 전에 실행된다. 아직까지는 DOM 노드인 $el을 사용할 수 있다.
+
+### 3.3.9 unmounted
+
+unmounted 훅은 언마운트 프로세스가 정상적으로 완료되고 컴포넌트 인스턴스를 사용할 수 없게 된 이후로 실행된다. DOM 이벤트 리스너 등의 부가 옵저버 효과를 이 훅에서 정리할 수 있다.
