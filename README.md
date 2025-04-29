@@ -909,3 +909,232 @@ Object
 출력 결과를 보면 user의 newValue와 oldValue가 같다. 그 이유는 user라는 인스턴스 자체는 업데이트에 관계없이 동일한 대상이기 때문이다. 변경사항은 name 필드의 값일 뿐이다.
 
 또한 deep 플래그를 켜면 Vue엔진은 user 객체의 모든 프로퍼티와 하위 프로퍼티를 순회하며 변화를 관찰한다. 따라서 user 객체 내부 데이터 구조가 과하게 복잡할 경우 성능에 지장을 줄 우려가 있다. 이럴 때는 모니터링 대상 프로퍼티를 명확히 지정하는 것이 좋다.
+
+# 250429 3.7 slot
+
+## 3.7 슬롯
+
+Vue의 경우 엘리먼트의 기본 UI 디자인을 필요에 따라 동적으로 교체할 수 있도록 <slot> 컴포넌트를 제공한다.
+
+<template>
+  <ul class="list-layout">
+    <li class="list-layout__item" v-for="item in items" :key="item.id">
+      <div class="list-layout__item__name">{{ item.name }}</div>
+      <div class="list-layout__item__description">{{ item.description }}</div>
+    </li>
+  </ul>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+interface Item{
+    id: number
+    name: string
+    description: string
+    thumbnamil?: string
+  }
+const subPath = "https://res.cloudinary.com/mayashavin/image/upload/v1643005666/Demo/"
+
+export default defineComponent({
+
+  name: 'ListLayout',
+  data(): { items : Item[] } {
+    return {
+      items:[
+        {
+          id: 1,
+          name: 'Item 1',
+          description: "This is item 1",
+          thumbnamil: subPath+'supreme_pizza'
+        },
+        {
+          id: 2,
+          name: 'Item 2',
+          description: 'This is item 2',
+          thumbnamil: subPath+'hawaiian_pizza'
+        },
+        {
+          id: 3,
+          name: 'Item 3',
+          description: 'This is item 3',
+          thumbnamil: subPath+'pina_colada_pizza'
+        }
+      ]
+    }
+  },
+})
+</script>
+
+이 코드는 일정 범위 안에서 특정 데이터 프로퍼티를 참조하는 슬롯을 생성한다. 여기서 item은 destructuring 구문이라 부른다. 아래는 커스텀 템플릿 컨텐츠에서 item을 직접 다룰 수 있다.
+
+```html
+<template>
+  <ul class="list-layout">
+    <li class="list-layout__item" v-for="item in items" :key="item.id">
+      <slot :item="item">
+        <div class="list-layout__item__name">{{ item.name }}</div>
+        <div class="list-layout__item__description">{{ item.description }}</div>
+      </slot>
+    </li>
+  </ul>
+</template>
+
+<script lang="ts">
+  import { defineComponent } from 'vue'
+
+  interface Item {
+    id: number
+    name: string
+    description: string
+    thumbnamil?: string
+  }
+  const subPath = 'https://res.cloudinary.com/mayashavin/image/upload/v1643005666/Demo/'
+
+  export default defineComponent({
+    name: 'ListLayout',
+    data(): { items: Item[] } {
+      return {
+        items: [
+          {
+            id: 1,
+            name: 'Item 1',
+            description: 'This is item 1',
+            thumbnamil: subPath + 'supreme_pizza',
+          },
+          {
+            id: 2,
+            name: 'Item 2',
+            description: 'This is item 2',
+            thumbnamil: subPath + 'hawaiian_pizza',
+          },
+          {
+            id: 3,
+            name: 'Item 3',
+            description: 'This is item 3',
+            thumbnamil: subPath + 'pina_colada_pizza',
+          },
+        ],
+      }
+    },
+  })
+</script>
+```
+
+```html
+<template>
+  <ListLayout v-slot="{item}">
+    <img
+      v-if="item.thumbnamil"
+      class="list-layout__item__thumnail"
+      :src="item.thumbnamil"
+      :alt="item"
+    />
+    <div class="list-layout__item__name">{{ item.name }}</div>
+  </ListLayout>
+</template>
+
+<script lang="ts">
+  import { defineComponent } from 'vue'
+  import ListLayout from './ListLayout.vue'
+
+  export default defineComponent({
+    components: { ListLayout },
+    name: 'ProductItemList',
+  })
+</script>
+
+<style scoped>
+  .list-layout__item__thumnail {
+    width: 400px; /* 원하는 너비 */
+    height: auto; /* 비율 유지 */
+    object-fit: cover; /* 이미지가 잘리지 않도록 조정 */
+  }
+</style>
+```
+
+```html
+<template>
+  <ProductItemList></ProductItemList>
+</template>
+
+<script lang="ts">
+  import { defineComponent } from 'vue'
+  import ProductItemList from './ProductItemList.vue'
+
+  export default defineComponent({
+    components: { ProductItemList },
+
+    name: 'MyComponent',
+  })
+</script>
+```
+
+이 예제는 엘리먼트를 단일 슬롯으로 지정해 템플릿을 커스터마이징하는 slot 컴포넌트 사용 사례다 훨씬 복잡한 시나리오도 얼마 든지 있다. 가령 상품 카드 섬네일, 상세설명 기능 영역 등을 각각 커스터마이징 한다면 어떨까? 이러 상황은 slot의 특기중 하나인 명명 기능(naming capability) 을 활용해 대처할 수 있다.
+
+## 3.8 템플릿과 v-slot으로 명명된 슬롯
+
+아이템 이름과 설명부 UI를 단일 슬롯에 담아 커스터마이징 영열을 설정했다. 이러한 영역을 섬네일, 상세 설명, 기능 푸터 등으로 각각 분할하려면 아래 예제처럼 name 속성을 지정해야 한다.
+
+```html
+<template>
+  <ul class="list-layout">
+    <li class="list-layout__item" v-for="item in items" :key="item.id">
+      <slot name="thumnail" :item="item"></slot>
+      <slot name="main" :item="item">
+        <div class="list-layout__item__name">{{ item.name }}</div>
+        <div class="list-layout__item__description">{{ item.description }}</div>
+      </slot>
+      <slot name="actions" :items="item"></slot>
+    </li>
+  </ul>
+</template>
+
+<script lang="ts">
+  import { defineComponent } from 'vue'
+
+  interface Item {
+    id: number
+    name: string
+    description: string
+    thumbnamil?: string
+  }
+  const subPath = 'https://res.cloudinary.com/mayashavin/image/upload/v1643005666/Demo/'
+
+  export default defineComponent({
+    name: 'ListLayout',
+    data(): { items: Item[] } {
+      return {
+        items: [
+          {
+            id: 1,
+            name: 'Item 1',
+            description: 'This is item 1',
+            thumbnamil: subPath + 'supreme_pizza',
+          },
+          {
+            id: 2,
+            name: 'Item 2',
+            description: 'This is item 2',
+            thumbnamil: subPath + 'hawaiian_pizza',
+          },
+          {
+            id: 3,
+            name: 'Item 3',
+            description: 'This is item 3',
+            thumbnamil: subPath + 'pina_colada_pizza',
+          },
+        ],
+      }
+    },
+  })
+</script>
+```
+
+각 슬롯에는 thumnail, main, actions라는 이름이 할당된다. 이들 중 main 슬롯은 아이템 이름과 설명을 표시하는 fallback 컨텐츠 템플릿을 담고 있다.
+
+커스텀 컨텐츠를 특정 슬롯에 전달하려면 먼저 컨텐츠를 template 태그로 감싼다. 그리고 해당 슬롯에 정의된 이름을 template 태그의 v-slot 디렉티브로 전달한다. 가령 다음 템플릿 컨텐츠는 이름이 slot-name인 슬롯으로 전달한다.
+
+```html
+<template #slot-name> </template>
+```
