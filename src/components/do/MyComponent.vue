@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts">
-import type { Task } from '@/ts_class/Task'
+import type { Task } from '@/ts_class/Task.ts'
 import { defineComponent } from 'vue'
 
 export default defineComponent({
