@@ -1138,3 +1138,340 @@ export default defineComponent({
 ```html
 <template #slot-name> </template>
 ```
+
+# 250430 3.9 ref ~ 3.10 믹스인
+
+## 3.9 ref의 이해
+
+Vue는 통상적으로 대부분의 DOM 상호작용을 알아서 처리한다. 그러나 일부상황에서 DOM을 세밀하게 조작하기 위해 컴포넌트 DOM 엘리먼트에 직접 접근할 필요가 있다. 이를테면 사용자가 버튼을 클릭할 때 모달 대화 상자를 연다거나, 컴포넌트 마운트 직후 특정 입력 필드에 포커스를 두려 하는 상황이다. 이러한 경우 ref 속성을 이용해 대상 DOM 엘리먼트 인스턴스에 접근할 수 있다.
+
+ref는 Vue 내장 속성이며 DOM 엘리먼트 또는 마운팅된 자식 인스턴스의 직접 참조를 전달해준다. ref 속성이 참조하는 대상 엘리먼트는 template 섹션에 있으며 대상 엘리먼트를 가르키는 참조 문자열을 ref 속성값으로 할당한다. ref는 아래는 DOM 엘리먼트 input을 참조하는 messageRef 생성예시다.
+
+```jsx
+<template>
+  <div>
+    <input type="text" ref="messageRef" placeholder="Enter a message"/>
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'MyComponent',
+})
+</script>
+
+```
+
+script 섹션에서 this.$refs.messageRef 인스턴스를 통해 messageRef에 접근하고 input 엘리먼트를 조작할 수 있다. messageRef는 참조 인스턴스로써 input 엘리먼트의 모든 프러퍼티와 메서드를 보유한다. 가령 this.$refs.messageRef.focus()를 실행하면 프로그램 방식으로 input 엘리먼트에 포커스를 지정할 수 있다.
+
+- ref 속성은 컴포넌트를 마운팅한 이후에 접근할 수 있다.
+
+참조 인스턴스는 대상 DOM 엘리먼트 또는 자식 컴포넌트 인스턴스의 모든 프로퍼티와 메서드를 보유한다. 구체적인 종류는 대상 엘리먼트의 타입에 따라 다르다. 만일 v-for를 적용한 엘리먼트에 ref 속성을 지정하면 참조 인스턴스는 반복 엘리먼트 전체가 순서없이 나열된 배열이 된다.
+
+```jsx
+<template>
+  <div>
+    <ul>
+      <li v-for="(task,index) in tasks" :key="task.id" ref="tasksRef">
+        {{ title }} {{ index }} : {{ task.description }}
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script lang="ts">
+import type { Task } from '@/ts_class/Task.ts'
+import { defineComponent } from 'vue'
+interface Task {
+    id: string;
+    description: string;
+}
+export default defineComponent({
+  name: 'TaskListComponent',
+  data() : {tasks: Task[],title: string}{
+    return {
+      tasks: [
+        {id: 'task01', description: 'Buy Groceries'},
+        {id: 'task02', description: 'Do laundry'},
+        {id: 'task03', description: 'Watch Moonknight'},
+      ],
+      title: 'Task'
+    };
+  }
+})
+</script>
+
+```
+
+Vue가 TaskListComponent를 마운팅하면 3개의 li DOM 엘리먼트가 담긴 taskRef 인스턴스가 refs의 프로퍼티로 지정된다. tasksRef는 Vue 데브툴에서 확인할 수 있다.
+
+this.$refs.taskRef를 통해 테스크 목록에 접근하고 원하는 데로 테스트를 추가하거나 수정할 수 있다.
+
+- ref앞에 :문자를 붙이면 문자열이 아닌 함수를 할당할 수 있다. 이 함수는 해당 엘리먼트의 참조 인스턴스를 파라미터로 입력받는다.
+
+## 3.10 믹스인과 컴포넌트 설정 공유
+
+서로 다른 컴포넌트가 유사한 데이터와 행동을 공유하는 것은 그리 드문 일이 아니다. 카페 컴포넌트와 레스토랑 컴포넌트를 상상하면 이해하기 쉽다. 둘 모두 예약, 결제 로직을 공유하는 동시에 자신만의 고유한 기능도 필요하다. 이러한 경우 두 컴포넌트가 공유할 표준 기능성을 (functionality) mixins 프로퍼티로 생성해두면 좋다.
+
+아래는 DiningComponent와 CafeComponent라는 두 컴포넌트의 표준 기능성을 담은 restrantMixin 객체를 생성한다.
+
+DiningComponent를 created 훅이 먼저 실행되고 mixin.ts 에 있는 created hook이 호출된다.
+
+```jsx
+import { defineComponent } from 'vue'
+
+export const retraurantMixin = defineComponent({
+  data() {
+    return {
+      menu: [],
+      reservations: [],
+      payments: [],
+      title: 'Resturant',
+    }
+  },
+  methods: {
+    makeReservation() {
+      console.log('Reservation made')
+    },
+    acceptPayment() {
+      console.log('Payment accepted')
+    },
+  },
+  created() {
+    console.log(`Welcome to ${this.title}`)
+  },
+})
+```
+
+```jsx
+<template>
+    <h1>title</h1>
+    <button @click="getDressCode">getDressCode</button>
+    <button @click="makeReservation">Make a reservation</button>
+    <button @click="acceptPayment">Accept a payment</button>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import {retraurantMixin} from '@/components/do/ch03/3_10_mixin/RestaurantMixin'
+
+export default defineComponent({
+    name: 'DiningComponent',
+    mixins: [retraurantMixin],
+    data() {
+        return {
+            title: 'Dining',
+            menu: [
+                { id: 'menu01', name: 'Steak' },
+                { id: 'menu02', name: 'Salad' },
+                { id: 'menu03', name: 'Soup' },
+            ]
+        };
+    },
+    methods:{
+        getDressCode(){
+            console.log('Dress code: Casual');
+        }
+    },
+    created() {
+     console.log('DiningComponent component created');
+    }
+})
+</script>
+
+```
+
+```jsx
+<template>
+    <h1>{{title}}</h1>
+    <p>Open time: 8am ~ 4pm</p>
+    <ul>
+        <li v-for="menuItem in menu" :key="menuItem.id">
+            {{ menuItem.name }}
+
+        </li>
+    </ul>
+    <button @click="acceptPayment">Accept a payment</button>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import {retraurantMixin} from '@/components/do/ch03/3_10_mixin/RestaurantMixin'
+
+export default defineComponent({
+    name: 'CafeComponent',
+    mixins: [retraurantMixin],
+    data() {
+        return {
+            title: 'Cafe',
+            menu: [
+                { id: 'menu01', name: 'Cafe' ,price:5},
+                { id: 'menu02', name: 'Tea' ,price:3},
+                { id: 'menu03', name: 'Cale' ,price:7},
+            ] as { id: string; name: string; price: number }[],
+        };
+    },
+    methods:{
+        getDressCode(){
+            console.log('Dress code: Casual');
+        }
+    },
+    created() {
+     console.log('CafeComponent component created');
+    }
+})
+</script>
+
+```
+
+```jsx
+<template>
+  <DiningComponent></DiningComponent>
+  <cafe-component></cafe-component>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import DiningComponent from '@/components/do/ch03/3_10_mixin/DiningComponent.vue'
+import CafeComponent from '@/components/do/ch03/3_10_mixin/CafeComponent.vue'
+
+export default defineComponent({
+  components: {DiningComponent,CafeComponent},
+
+  name: 'MyComponent'
+    ,
+
+})
+</script>
+
+```
+
+컴포넌트가 생성되면 Vue 엔진은 믹스인 로직을 컴포넌트에 병합한다. 컴포넌트의 데이터 정의와 믹스인이 상충할 경우 우선권은 데이터에 있다. DiningComponent와 CafeComponent는 menu, reservations, payments, title 등의 프로퍼티를 동일하게 보유하지만 각각의 값은 다르다. 또한 restrauranMixins에 선언된 메서드와 훅은 두 컴포넌트에서 동일하게 사용할 수 있다. 이러한 작동 방식은 컴포넌트가 믹스인 훅의 행동을 오버라이드하지 않는 다는 점을 제외하면 마치 상속 패턴과 비슷하다. 다만 Vue 엔진은 믹스인의 훅을 먼저 호출한 다음 컴포넌트 훅을 호출한다.
+
+Vue가 DiningComponent를 마운팅하면 브라우저 콘솔에 다음과같이 출력된다.
+
+```jsx
+Welcome to Dining
+DiningComponent component created
+```
+
+출력 결과를 보면 두 컴포넌트의 title값이 다르게 설정되었음을 알 수 있다. 또한 Vue는 restraurantMixin의 created 훅을 먼저 실행하고 각 컴포넌트에 선언된 훅을 이어서 실행했다.
+
+믹스인은 컴포넌트 사이에 공통 로직을 공유하고 코드 조직화를 하는데 큰 역할을 한다. 그러나 믹스인을 남발하면 다른 개발자가 코드를 읽거나 디버깅할 때 큰 혼란을 야기하기 쉽다. 믹스인을 선택하기 전에 Composition API등의 대안이 더 적합한 상황이 아닌 지 검토해본다.
+
+# 250501 3.10 scoped
+
+## 3.11 컴포넌트 스타일과 적용 범위
+
+일반 HTML 페이지 구조와 마찬가지로 SFC 컴포넌트 또한 <style> 태그로 CSS 스타일을 정의할 수 있다.
+
+style 섹션은 일반적으로 Vue SRC 컴포넌트에 마지막 순서로 등장한다.
+복수의 섹션이 존재해도 무방하다. 컴포넌트가 DOM에 마운팅되면 Vue엔진은  
+style 태그에 정의된 CSS 스타일을 애플리케이션 전체에 적용한다. 이때 적용 대상은 전체 엘리먼트 혹은 DOM 선택자와 일치하는 엘리먼트다. 다시 말해 컴포넌트의 style에 작성된 CSS 규칙은 일단 마운팅된 후 전역적으로 적용된다.
+
+```jsx
+<template>
+  <h1 class="heading">{{ title }}</h1>
+  <p class="class">{{ description }}</p>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'HeadingComponent',
+  data(): { title: string; description: string } {
+    return {
+      title: 'Welcome to Vue Restaurant',
+      description: 'A Vue.js project to learn Vue.js',
+    }
+  },
+})
+</script>
+
+<style scoped>
+.heading {
+  color: #178c0e;
+  font-size: 2em;
+}
+
+.description {
+  color: #b76210;
+  font-size: 1em;
+}
+</style>
+
+```
+
+컴포넌트에서 h1과 p 엘리먼트는 각각 heading과 description이라는 CSS 클래스 선택자가 지정된다. Vue가 컴포넌트를 마운팅하면 브라우저는 지정된 스타일에 맞게 엘리먼트를 표현한다.
+
+HeadingComponent의 부모 컴포넌트인 App.vue에 span 엘리먼트를 추가하고 동일하게 heading 클래스 선택자를 지정한다.
+
+```jsx
+<template>
+  <section class="wrapper">
+    <HeadingComponent />
+    <span class="heading">This is span a element in parent</span>
+  </section>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import HeadingComponent from '@/components/do/ch03/3_11_style/HeadingComponent.vue'
+
+export default defineComponent({
+  name: 'ParentComponent',
+  components: { HeadingComponent },
+  data(): { title: string; description: string } {
+    return {
+      title: 'Welcome to Vue Restaurant',
+      description: 'A Vue.js project to learn Vue.js',
+    }
+  },
+})
+</script>
+
+<style scoped></style>
+
+```
+
+HeadingComponent에 템플릿이 없거나 애플리케이션 런타임에 포함되기 전이라면 App.vue의 span 엘리먼트는 heading 클래스 선택자와 일치하는 CSS 규칙을 찾을 수 없다.
+
+이러한 사고를 방지하려면 스타일 규칙과 선택자를 더욱 효과적으로 제어할 수 있어야 한다. 이를 위해 Vue는 scoped 속성이라는 고유한 기능을 제공한다. Vue는 style scoped 의 CSS 규칙을 컴포넌트 내부 엘리먼트에 한해 적용하며 애플리케이션의 나머지 영역으로 유출되지 않도록 한다. 이러한 Vue 메커니즘은 다음과 같은 과정으로 진행된다.
+
+1. 대상 엘리먼트에 데이터 속성을 추가한다. 속성명은 data-v 접두어와 무작위 데이터를 연결한 문자열이다.
+2. style scoped 태그에 저으이된 CSS 선택자가 이 데이터 속성을 포함하도록 추가한다.
+
+이 기능이 실제로 어떻게 동작하는 지 살펴보자.
+
+```jsx
+<style scoped>
+.heading {
+  color: #178c0e;
+  font-size: 2em;
+}
+
+.description {
+  color: #b76210;
+  font-size: 1em;
+}
+</style>
+```
+
+부모컴포넌트에 정의된 span 엘리먼트는 HeadingComponent의 h1 엘리먼트와 CSS 스타일이 다르다.
+브라우저 개발자도구에서 Elements 요소를 보면 아래와 같이 data-v-xxxx 속성이 지정되어 있다.
+
+```jsx
+<h1 data-v-3fefa2fa="" class="heading">Welcome to Vue Restaurant</h1>
+
+.heading[data-v-3fefa2fa] {
+    color: #178c0e;
+    font-size: 2em;
+}
+```
+
+컴포넌트를 작성할 때부터 scoped 속성을 지정할 것을 권장한다. 프로젝트 성장에 따른 예기치 못한 CSS 버그를 방지하는 좋은 습관이다.
+
+- 브라우저 CSS 스펙에 따라 스타일 적용 순서를 결정한다. Vue scoped 메커니즘은 컴포넌트 스타일에 속성 선택자 [data-v-xx]를 추가한다. 따라서 부모 컴포넌트에 .heading이 있다 헤도 자식 컴포넌트의 .heading 선택자만으로 이를 오버라이딩 할 수 없다.
