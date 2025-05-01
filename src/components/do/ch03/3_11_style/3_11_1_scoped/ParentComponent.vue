@@ -1,7 +1,7 @@
 <template>
   <section class="wrapper">
     <HeadingComponent />
-    <span class="heading">This is span a element in parent</span>
+    <span class="heading">!!This is span a element in parent</span>
   </section>
 </template>
 

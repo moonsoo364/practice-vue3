@@ -1,7 +1,7 @@
 <template>
   <section class="wrapper">
     <HeadingComponent />
-    <span class="heading">This is span a element in parent</span>
+    <span class="heading">!!This is span a element in parent</span>
   </section>
 </template>
 
@@ -21,4 +21,8 @@ export default defineComponent({
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+/* .wrapper :deep(p) {
+  color: #000;
+} */
+</style>
