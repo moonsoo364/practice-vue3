@@ -1361,7 +1361,7 @@ DiningComponent component created
 
 믹스인은 컴포넌트 사이에 공통 로직을 공유하고 코드 조직화를 하는데 큰 역할을 한다. 그러나 믹스인을 남발하면 다른 개발자가 코드를 읽거나 디버깅할 때 큰 혼란을 야기하기 쉽다. 믹스인을 선택하기 전에 Composition API등의 대안이 더 적합한 상황이 아닌 지 검토해본다.
 
-# 250501 3.10 scoped
+# 250501 ~ 250502 3.10 scoped
 
 ## 3.11 컴포넌트 스타일과 적용 범위
 
@@ -1475,3 +1475,526 @@ HeadingComponent에 템플릿이 없거나 애플리케이션 런타임에 포�
 컴포넌트를 작성할 때부터 scoped 속성을 지정할 것을 권장한다. 프로젝트 성장에 따른 예기치 못한 CSS 버그를 방지하는 좋은 습관이다.
 
 - 브라우저 CSS 스펙에 따라 스타일 적용 순서를 결정한다. Vue scoped 메커니즘은 컴포넌트 스타일에 속성 선택자 [data-v-xx]를 추가한다. 따라서 부모 컴포넌트에 .heading이 있다 헤도 자식 컴포넌트의 .heading 선택자만으로 이를 오버라이딩 할 수 없다.
+
+### 3.11.2 슬롯 컨텐츠에 scoped 스타일 적용하기
+
+설계 의도상 style scoped 태그에 정의된 모든 스타일은 해당 컴포넌트의 기본 template만 관할한다. 따라서 Vue는 슬롯 컨텐츠에 data-v-xxxx 속성을 추가하지 않는다. 슬롯 컨텐츠에 스타일을 지정하려면 :slotted([CSS 선택자]) 형태로 의사 클래스를 사용하거나 부모 선에서 슬롯 전용 style 섹션을 마련하고 체계적으로 관리해야 한다.
+
+### 3.11.3 스타일 태그에서 v-vind()로 컴포넌트 데이터 접근하기
+
+컴포넌트 데이터에 접근해 값을 얻고 이를 CSS 프로퍼티에 대입해야할 때가 종종 있다. 가령 애플리케이션은 사용자가 선택한 결정에 따라 다크 모드를 전환하거나 테마 색상을 변경해야 한다. 이런 경우는 의사 클래스 v-bind()를 사용할 수 있다. 
+
+v-bind()는 하나의 인수를 입력받으며, 인수 형태는 컴포넌트의 데이터 프로퍼티 또는 자바 스크립트 표현식 문자열이다. 가령 [예제-35]는 titleColor 데이터 프로퍼티 값을 HeadingComponent의 h1 엘리먼트 색상으로 지정한다.
+
+```jsx
+<template>
+  <h1 class="heading">{{ title }}</h1>
+  <p class="description">{{ description }}</p>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'HeadingComponent',
+  data(): { title: string; description: string; titleColor: string } {
+    return {
+      title: 'Welcome to Vue Restaurant',
+      description: 'A Vue.js project to learn Vue.js',
+      titleColor: '#178c0e',
+    }
+  },
+})
+</script>
+
+<style scoped>
+.heading {
+  color: v-bind(titleColor);
+  font-size: 2em;
+}
+
+.description {
+  color: #b76210;
+  font-size: 1em;
+}
+</style>
+
+```
+
+```jsx
+<template>
+  <section class="wrapper">
+    <HeadingComponent />
+    <span class="heading">!!This is span a element in parent</span>
+  </section>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import HeadingComponent from '@/components/do/ch03/3_11_style/3_11_3_v-bind/HeadingComponent.vue'
+
+export default defineComponent({
+  name: 'ParentComponent',
+  components: { HeadingComponent },
+  data(): { title: string; description: string } {
+    return {
+      title: 'Welcome to Vue Restaurant',
+      description: 'A Vue.js project to learn Vue.js',
+    }
+  },
+})
+</script>
+
+<style scoped>
+/* .wrapper :deep(p) {
+  color: #000;
+} */
+</style>
+
+```
+
+v-bind() 의사 클래스는 titleColor 데이터 프로퍼티 값을 인라인해서 CSS 변수로 변환한다.
+
+```jsx
+<h1 data-v-f0f3fbad="" class="heading" style="--f0f3fbad-titleColor: #178c0e;">Welcome to Vue Restaurant</h1>
+<p data-v-f0f3fbad="" class="description" style="--f0f3fbad-titleColor: #178c0e;">A Vue.js project to learn Vue.js</p>
+```
+
+브라우저 개발자 도구에서  Elements 탭을 열고 스타일을 살펴보자 .heading 선택자의 color 프로퍼티는 정적인 값이다. 그러나 titleColor의 인라인 해시 CSS와 동일한 값이 지정됐음을 알 수 있다.
+
+```css
+element.style {
+    --f0f3fbad-titleColor: #178c0e;
+}
+.heading[data-v-f0f3fbad] {
+    color: var(--f0f3fbad-titleColor);
+    font-size: 2em;
+}
+```
+
+v-bind()는 컴포넌트에서 데이터를 가져와 CSS 프로퍼티에 동적으로 바인딩할 수 있는 편리한 도구다. 그러나 이 방식은 단반향 바인딩에 지나지 않는다. template에 정의된 CSS 스타일을 엘리먼트에 바인딩하려면 이어서 다룰 CSS 모듈을 사용해야 한다.
+
+## 3.12 CSS 모듈과 컴포넌트 스타일
+포넌트 단위로 CSS 스타일의 범위를 지정하는 또 하나의 수단은 CSS 모듈이다. CSS 모듈은 평범하게 작성한 CSS 스타일을 template 및 script 섹션에서 자바스크립트 객체 형태로 소비할 수 있도록 해준다.
+
+```jsx
+<template>
+  <h1 :class="$style.heading">{{ title }}</h1>
+  <p :class="$style.description">{{ description }}</p>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'HeadingComponent',
+  data(): { title: string; description: string; titleColor: string } {
+    return {
+      title: 'Welcome to Vue Restaurant',
+      description: 'A Vue.js project to learn Vue.js',
+      titleColor: '#178c0e',
+    }
+  },
+})
+</script>
+
+<style module>
+.heading {
+  color: #178c0e;
+  font-size: 2em;
+}
+
+.description {
+  color: #b76210;
+  font-size: 1em;
+}
+</style>
+
+```
+
+브라우저 출력 결과는 동일하다. 그러나 브라우저 개발자 도구의 elements 탭을 확인하면 Vue가 해시 클래스명 방식으로 스타일 적용 범위를 관리하고 있음을 알 수 있다.
+
+```jsx
+<h1 class="_heading_v3861_2">Welcome to Vue Restaurant</h1>
+<p class="_description_v3861_7">A Vue.js project to learn Vue.js</p>
+
+<style>
+._description_v3861_7 {
+    color: #b76210;
+    font-size: 1em;
+}
+</style>
+```
+
+추가로 module 속성에 문자열을 할당하면 $style이라는 이름을 원하는 대로 바꿀 수 있다.
+
+```jsx
+<template>
+  <h1 :class="headerClasses.heading">{{ title }}</h1>
+  <p :class="headerClasses.description">{{ description }}</p>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'HeadingComponent',
+  data(): { title: string; description: string; titleColor: string } {
+    return {
+      title: 'Welcome to Vue Restaurant',
+      description: 'A Vue.js project to learn Vue.js',
+      titleColor: '#178c0e',
+    }
+  },
+})
+</script>
+
+<style module="headerClasses">
+.heading {
+  color: #178c0e;
+  font-size: 2em;
+}
+
+.description {
+  color: #b76210;
+  font-size: 1em;
+}
+</style>
+
+```
+
+- 컴포넌트에 script setup 또는 setup() 함수가 있다면 내부에서 useCssModule() 훅으로 스타일 객체 인스턴스에 접근할 수 있다. 이함수는 스타일 객체명을 인수로 받는다.
+
+이제 컴포넌트는 style태그에 scoped 속성을 적용했을 때 한층 격리된 구조를 띤다. 코드는 더욱 체계화되었지만 외부에서 컴포넌트 스타일을 오버라이딩하기는 어려워졌다. Vue가 CSS 선택자에 무작위 해쉬를 대입하기 때문이다. 컴포넌트의 구조적 우위는 결국 프로젝트의 요구 사항에 달려있다. 때에 따라서는 원하는 결과를 얻기 위해 scoped 속성과 module 속성을 병용할 수도 있음을 명심하기 바란다.
+
+### 정리
+
+이번장에서는 SFC 표준에 따라 컴포넌트를 생성하고 defineCompnent()로 Vue 애플리케이션에 타입스크립트를 온전히 활서오하시키는 방법을 배웠다. 또한 슬롯을 이용해 재사용 가능한 컴포넌트를 만들고 여러 컨텍스트에서 스타일을 격리했으며 믹스인 설정을 공유하는 방법도 배웠다. 또한 옵션 API를 탐색하며 컴포넌트 라이프사이클 훅, computed, methods, watch 프로퍼티 등으로 컴포넌트를 구성했다. 다음 장은 이러한 지식을 바탕으로 커스텀 이벤트를 생성하여 제공/주입 패턴을 따라 컴포넌트 간 상호작용을 개발할 것이다.
+
+## 4. 컴포넌트 상호작용
+
+3장에서는 라이프사이클 훅, computed 프로퍼티, 와처 메서드 등의 기능으로 컴포넌트를 구성하는 방법을 심도 있게 살펴봤다. 
+
+이런 기초 지식을 발판 삼아 이번 장에서는 커스텀 이벤트와 제공/주입패턴으로 컴포넌트 상호작용을 구축하는 방법을 알아볼 것이다. 또한 텔레포트 API라는 편리한 기능을 선보인다. 텔레포트 API는 컴포넌트 내부에서 엘리먼트를 유지한 채 DOM 트리의 원하는 위치로 이동시킬 수 있는 도구이다.
+
+## 4.1 자식 컴포넌트 상호작용
+
+Vue 컴포넌트 내부에 다른 Vue 컴포넌트를 중첩시킬 수 있다. 이러한 특성을 이용해 사용자는 복잡한 UI 프로젝트를 작은 코드로 나누어 재사용성을 높이고 각 코드 조각을 효과적으로 관리할 수 있다. 이제부터 중첩 엘리먼트는 자식 컴포넌트로, 이들을 담고 있는 컴포넌트는 부모 컴포넌트로 지정한다. Vue 애플리케이션의 데이터 흐름은 기본적으로 단방향이다. 다시 말해, 부모 컴포넌트에서 자식 컴포넌트로 데이터를 전달하는데 그 반대 방향으로는 전달할 수 없다. props는 부모가 자식 컴포넌트에 데이터를 전달하는 수단이다. 자식 컴포넌트는 커스텀 이벤트를 emits에 담아 부모 컴포넌트로 이벤트를 발산한다. 아래는 컴포넌트 사이의 데이터 흐름을 나타낸다.
+
+```
+부모 컴포넌트 (props)-> 자식 컴포넌트 (props)-> 손자 컴포넌트
+부모 컴포넌트 (emits) <- 자식 컴포넌트 (emits) <- 손자 컴포넌트
+```
+
+- props의 함수 전달 : 여타 프레임워크와 달리 Vue는 함수 형태로 자식 컴포넌트에 prop을 전달할 수 없다. 함수를 전달하려면 커스텀 이벤트 형태로 emiter에 바인딩해야 한다.
+
+### 4.1.1 props를 통한 컴포넌트 데이터 전달
+
+Vue 컴포넌트의 props 필드는 객체 또는 배열 형태로 정의한다. props는 부모 엘리먼트로 부터 수신할 모든 데이터 프로퍼티를 담고 있으며 각 프로퍼티는 대상 컴포넌트의 prop과 대응된다. 컴포넌트 옵션 객체에 props필드를 선언하면 부모로부터 데이터를 수신할 수 있다.
+
+```jsx
+<template>
+    <section class="wrapper">
+      <span class="heading">!!This is span a element in parent</span>
+    </section>
+  </template>
+  
+  <script lang="ts">
+  import { defineComponent } from 'vue'
+  
+  
+  export default defineComponent({
+    name: 'ChildComponent',
+    props:{
+      name: String  
+    },
+    data(): { title: string; description: string } {
+      return {
+        title: 'Welcome to Vue Restaurant',
+        description: 'A Vue.js project to learn Vue.js',
+      }
+    },
+  })
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  
+```
+
+```jsx
+<template>
+  <ChildComponent></ChildComponent>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import ChildComponent from './ch04/4.1.1_props/ChildComponent.vue';
+
+export default defineComponent({
+  name: 'ParentComponent',
+  components: { ChildComponent },
+  data(): { title: string; description: string } {
+    return {
+      title: 'Welcome to Vue Restaurant',
+      description: 'A Vue.js project to learn Vue.js',
+    }
+  },
+})
+</script>
+
+<style scoped>
+/* .wrapper :deep(p) {
+  color: #000;
+} */
+</style>
+
+```
+
+name prop은 String 타입이다. 부모 컴포넌트는 name prop을 통해 자식 컴포넌트에 데이터를 전달 할 수 있다. 정적 문자열 ‘Red Sweater’를ChildCompnent에 name값으로 전달한다. 동적데이터 변수를 넘기려면 v-bind 속성 또는 : 문자를 사용하면 된다. 다음은 children 배열의 첫번쨰 값을 name으로 전달한다. 
+
+```jsx
+<template>
+  <!-- <ChildComponent name="Red Sweater"></ChildComponent> -->
+  <ChildComponent :name="children[0]"></ChildComponent>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import ChildComponent from './ch04/4.1.1_props/ChildComponent.vue';
+
+export default defineComponent({
+  name: 'ParentComponent',
+  components: { ChildComponent },
+  data(): { children: string[] } {
+    return {
+      children: ['Red Sweater','Blue T-shirt','Gereen Hat']
+    }
+  },
+})
+</script>
+
+<style scoped>
+
+</style>
+
+```
+
+자식 컴포넌트에 둘 이상의 props가 있어도 같은 방식으로 각각의 데이터를 prop에 전달할 수 있다. 아래는 name과 price를 ProductComp 컴포넌트에 전달하는 예이다.
+
+```jsx
+<template>
+  <ProductComp :name="product.name" :price="product.price" />
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import ProductComp from '@/components/do/ch04/4.1.1_product_exam/ProductComp.vue'
+
+export default defineComponent({
+  name: 'ProductList',
+  components: { ProductComp },
+  data(): { product: { name: string; price: number } } {
+    return {
+      product: {
+        name: 'Red Sweater',
+        price: 19.99
+      }
+    }
+  },
+})
+</script>
+
+<style scoped>
+
+</style>
+
+```
+
+```jsx
+<template>
+  <div>
+    <p>Product : {{ name }}</p>
+    <p>Price : {{ price }}</p>
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'ProductComp',
+  props: {
+    name: String,
+    price: Number
+  },
+})
+</script>
+
+<style scoped>
+
+</style>
+
+```
+
+또한 다음과 같이 v-bind를 사용하면 product 객체를 한번에 전달하고 각 프로퍼티를 자식 컴포넌트의 props에 바인딩 할 수 있다. 이 경우 `:`문자로 축약하지 않는다.
+
+```jsx
+<template>
+  <div>
+    <p>Product : {{ product.name }}</p>
+    <p>Price : {{ product.price }}</p>
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'ProductComp',
+  props: {
+    product: {
+      type: Object,
+      required: true,
+      default: () => ({
+        name: '',
+        price: 0,
+      }),
+    },
+  },
+})
+</script>
+
+<style scoped>
+
+</style>
+ 
+```
+
+```jsx
+<template>
+  <!-- <ProductComp :name="product.name" :price="product.price" /> -->
+  <ProductComp :product="product" />
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import ProductComp from '@/components/do/ch04/4.1.1_product_exam/ProductComp.vue'
+
+export default defineComponent({
+  name: 'ProductList',
+  components: { ProductComp },
+  data(): { product: { name: string; price: number } } {
+    return {
+      product: {
+        name: 'Red Sweater',
+        price: 19.99
+      }
+    }
+  },
+})
+</script>
+
+<style scoped>
+
+</style>
+
+```
+
+자식 컴포넌트는 자신이 정의한 props만 할당 받는다. 따라서 부모 컴포넌트에 product.description이라는 필드가 있다 해도 자식 컴포넌트에서 이 필드에 접근할 수 없다.
+
+- 컴포넌트의 props는 문자열 배열로 선언하는 방법도 있다. props: [”name”, “price”] 와 같이 선언하면 배열 원소가 각 prop의 이름이 된다. 이러한 방식은 컴포넌트의 프로토타입을 빨리 만들어야할 때 효과적이다. 그러나 코드 가독성을 높이고 버그를 예방하는데는 방해가 된다, 되도록이면 항상 props  객체 형식을 고수하고 모든 prop에 타입을 지정할 것을 권장한다.
+
+props를 선언하고 타입을 지정하는 방법을 배웠다, 그렇다면 자식 컴포넌트 props로 전달된 데이터의 유효성은 어떻게 검증해야 할까? 또한 값이 전달되지 않았을 때 사용할 폴백값은 어떻게 설정할 수 있을까? 이어서 알아보자
+
+### 4.1.2 prop 타입 유효성 검사 및 기본값
+
+name prop을 String 타입으로 선언했다. 런타임 도중 컴포넌트가 name prop에 문자열이 아닌 값을 전달하면 Vue는 경고를 보낸다. 이러한 Vue의 타입 검사기능을 온전히 활용하려면 다음과 같은 전체 선언 구문을 살펴봐야 한다.
+
+```jsx
+{
+    type: String | Number | Boolean | Array | Object | Data | Function | Symbol,
+    default?: any,
+    requird?: boolean,
+    validator?: (value: any)
+}
+```
+
+다음은 선언 구문의 각 항목에 대한 설명이다.
+
+- type: prop의 타입, 내장 타입 혹은 생성자 함수(또는 커스텀 클래스)를 지정할 수 있다.
+- default: 값이 전달되지 않았을 때 prop의 기본값, 기본값이 Object Function, Array 타입인 경우 초기값을 반환하는 함수 형태로 정의한다.
+- required: prop의 필수 여부를 나타내는 불리언값, required가 true면 부모 컴포넌트는 prop에 값을 반드시 전달해야 한다. 그렇지 않은 경우 prop을 생략할 수 있다.
+- validator: prop에 전달된 값을 검증하는 함수, 개발 디버깅에 활용하면 편리하다.
+
+```jsx
+<template>
+    <section class="wrapper">
+      <span class="heading">!!This is span a element in parent</span>
+    </section>
+  </template>
+  
+  <script lang="ts">
+  import { defineComponent } from 'vue'
+  
+  
+  export default defineComponent({
+    name: 'ChildComponent',
+    props:{
+      name: {
+        type: String,
+        default: 'Child Component'
+      }
+    },
+  })
+  </script>
+  
+  
+```
+
+부모 컴포넌트가 값을 전달하지 않으면 자식 컴포넌트는 name prop의 기본값인 Child Component로 대체된다.
+
+또한 아래와 같이 name을 자식 컴포넌트의 필수 프로퍼티로 설정하고 전달 데이터 유효성 검사기를 추가할 수 있다.
+
+```jsx
+<template>
+    <section class="wrapper">
+      <span class="heading">!!This is span a element in parent</span>
+    </section>
+  </template>
+  
+  <script lang="ts">
+  import { defineComponent } from 'vue'
+  
+  
+  export default defineComponent({
+    name: 'ChildComponent',
+    props:{
+      // name: {
+      //   type: String,
+      //   default: 'Child Component'
+      // },
+      name: {
+        type: String, required: true,
+        validator: value => value !== "Child component"
+      },
+    },
+  })
+  </script>
+  
+  
+```
+
+name prop에서 값을 전달하지 않거나 전달한 값이 Child component와 일치할 경우 Vue는 개발 모드에서 다음과 같은 경고를 한다.
+
+```jsx
+MyComponent.vue?t=1746151682858:56 [Vue warn]: Invalid prop: custom validator check failed for prop "name". 
+  at <ChildComponent name="Child component" > 
+  at <ProductList > 
+  at <App>
+```
+
+- default 필드에서 Function 타입이 지정된 경우, prop의 초기값을 반환하는 함수를 전달해야 한다. 이 함수는 데이터를 부모 컴포넌트로 되돌려 보내지 않으며, 이 함수에서 변경되는 데이터를 부모 수준에서 감지할 수 없다.
+
+내장 타입은 Vue가 기본적으로 유효성을 검사한다. 추가로, 자바 스크립트 Class 또는 함수 생성자에 타입스크립트를 추가하면 커스텀 prop을 만들고 유효성을 검사할 수 있다.

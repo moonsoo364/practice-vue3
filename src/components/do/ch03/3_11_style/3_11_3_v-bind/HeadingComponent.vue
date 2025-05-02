@@ -20,7 +20,7 @@ export default defineComponent({
 
 <style scoped>
 .heading {
-  color: #178c0e;
+  color: v-bind(titleColor);
   font-size: 2em;
 }
 

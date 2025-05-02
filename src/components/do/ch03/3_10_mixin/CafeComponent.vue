@@ -12,7 +12,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import {retraurantMixin} from '@/components/do/ch03/3_10_mixin/RestaurantMixin'
+import {retraurantMixin} from '@/components/do/ch03/3_10_mixin/restaurantMixin'
 
 export default defineComponent({
     name: 'CafeComponent',
