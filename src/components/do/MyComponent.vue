@@ -1,26 +1,41 @@
 <template>
-  <!-- <ProductComp :name="product.name" :price="product.price" /> -->
-  <ChildComponent :name="product.name" />
+  <ul style="list-style: none;">
+      <li v-for="task in tasks" :key="task.id">
+          <ToDoItem 
+            :task="task"
+            @task-completed-toggle="onTaskCompleted"
+          />
+      </li>
+  </ul>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import ChildComponent from '@/components/do/ch04/4_1_2_prop_validation/ChildComponent.vue'
-
+import {defineComponent} from 'vue'
+import ToDoItem from '@/components/do/ch04/4_2_custom_event/ToDoItem.vue'
+import type {Task} from '@/components/do/ch04/type/Class'
 export default defineComponent({
-  name: 'ProductList',
-  components: { ChildComponent },
-  data(): { product: { name: string; price: number } } {
-    return {
-      product: {
-        name: 'Child component',
-        price: 19.99
-      }
+  name: 'ToDoList',
+  components:{
+      ToDoItem
+  },
+  methods:{
+    onTaskCompleted(payload: {id: number; completed: boolean;}){
+      console.log(payload); 
+      const index = this.tasks.findIndex(t => t.id === payload.id);
+      if(index < 0) return;
+      this.tasks[index].completed = payload.completed;
+      
+      
     }
+  },
+  data() {
+    return {
+      tasks: [
+        {id: 1, title:'Learn Vue', completed: false},
+        {id: 2, title:'Learn TypeScript', completed: false},
+        {id: 3, title:'Learn Vite', completed: false},
+      ] as Task[]
+    };
   },
 })
 </script>
-
-<style scoped>
-
-</style>

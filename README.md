@@ -1361,7 +1361,7 @@ DiningComponent component created
 
 믹스인은 컴포넌트 사이에 공통 로직을 공유하고 코드 조직화를 하는데 큰 역할을 한다. 그러나 믹스인을 남발하면 다른 개발자가 코드를 읽거나 디버깅할 때 큰 혼란을 야기하기 쉽다. 믹스인을 선택하기 전에 Composition API등의 대안이 더 적합한 상황이 아닌 지 검토해본다.
 
-# 250501 ~ 250502 3.10 scoped
+# 250501 ~ 250502, 3.10 scoped ~  
 
 ## 3.11 컴포넌트 스타일과 적용 범위
 
@@ -1998,3 +1998,145 @@ MyComponent.vue?t=1746151682858:56 [Vue warn]: Invalid prop: custom validator ch
 - default 필드에서 Function 타입이 지정된 경우, prop의 초기값을 반환하는 함수를 전달해야 한다. 이 함수는 데이터를 부모 컴포넌트로 되돌려 보내지 않으며, 이 함수에서 변경되는 데이터를 부모 수준에서 감지할 수 없다.
 
 내장 타입은 Vue가 기본적으로 유효성을 검사한다. 추가로, 자바 스크립트 Class 또는 함수 생성자에 타입스크립트를 추가하면 커스텀 prop을 만들고 유효성을 검사할 수 있다.
+### 4.1.3 커스텀 prop 타입 검사
+
+Array, String, Object 등의 기본 타입만 있어도 대부분의 사용 요건에 대응할 수 있다. 그러나 애플리케이션이 성장하면 컴포넌트도 복잡하지기 마련이며 기본 타입으로만으로 타입 안정성을 지키기 힘든 상황이 벌어지기도 한다. PizzaCompnent에 담긴 다음과ㅏ 같은 템프릿 코드를 살펴보자
+
+```jsx
+<template>
+    <header>Title : {{ pizza.title }}</header>
+    <div class="pizza--details-wrapper">
+        <img :src="pizza.image" :alt="pizza.title" width="300"/>
+        <p>Description : {{ pizza.description }}</p>
+        <div class="pizza-inventory">
+            <div class="pizza--invertory-stock">Quantity: {{ pizza.quantity }}</div>
+            <div class="pizza--invertory-price">Price: {{ pizza.price }}</div>
+        </div>
+    </div>
+</template>
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+    name: 'PizzaComponent',
+    props:{
+        pizza:{
+            type: Object,
+            required: true
+        }
+    }
+})
+</script>
+
+```
+
+간단 명료한 구조다. 그러나 pizza를 Object 타입으로 선언하는 배경에는 부모가 올바른 오브젝트를 전달한다는 가정이 깔려 있다. 다시말해, pizza를 렌더링하기 위해 필요한 title, image, description, quantity, price 등의 필드가 오브젝트 안에 존재해야 한다.
+
+이러한 가정은 문제의 소지가 있다. pizza는  Object 타입 데이터를 조건 없이 수용하므로, PizzaComponent를 사용하는 모든 컴포넌트는 pizza에 필요한 필드가 누락된 오브젝트 데이터를 prop으로 전달할 수 있다.
+
+### 4.1.4 defineProps()와 withDefaults()를 이용한 prop선언
+타입스크립트를 활용하면 컴포넌트별 타입을 선언할 수 있다. 이를 defineProps()로 전달하면 컴파일 과정에서 유효성을 검사한다.
+
+```jsx
+<template>
+    <header>Name : {{ name }}</header>
+  </template>
+  
+  <script lang="ts">
+  import { defineProps } from 'vue'
+  type ChildProps = {
+    name?: string
+  }
+ const props = defineProps<ChildProps>()
+  </script>
+  
+```
+
+이 상태에서 name prop의 기본값을 선언하려면 defineProps()를 with-Defaults()로 감싸면 된다.
+
+```jsx
+<template>
+    <header>Name : {{ name }}</header>
+  </template>
+  
+  <script lang="ts">
+  import { defineProps, withDefaults } from 'vue'
+  type ChildProps = {
+    name?: string
+  }
+ const props = withDefaults(defineProps<ChildProps>(),{
+  name: 'Hello from the child component'
+ }) 
+  </script>
+  
+```
+
+- 타입 스크립트의 유효성와 defineProps() : withDefaults()를 쓰면 props 타입의 런타임 검사와 컴파일타임 검사가 동시에 작동하지 않는다. 가급적 defineProps() 사용하면서 코드 가독성을 높이고 Vue와 타입 스크립트의 유효성 검사를 병행하기 바란다.
+
+## 4.2 커스텀 이벤트와 컴포넌트 간 통신
+
+커스텀 이벤트는  script setup 코드에서 defineEmits()로 정의한다. defineEmits() 함수의 입력 파라미터 타입은 앞서 배웠던 emits와 동일하다.
+
+```jsx
+const emits = defineEmits(['component-event'])
+```
+
+`defineEmits()` 가 반환하는 함수 인스턴스를 통해 다음과 같이 특정 이벤르를 호출할 수 있다.
+
+```jsx
+emits('component-event',[...args])
+```
+
+아래 예시는  script setup 코드 블록에서 this 인스턴스를 사용하지 않으므로 defineComponent를 적용할 필요가 없다.
+
+단일 문자열 대신 특정 타입으로 task-completed-toggle 이벤트를 선언하면 타입 유효성을 효과적으로 검증할 수 있다.
+
+```jsx
+<script lang="ts" setup>
+import { defineProps, type PropType } from 'vue';
+import type { Task } from '@/components/do/ch04/type/Class';
+// emit 타입 선언
+type EmitEvents={
+  (e: 'task-completed-toggle',task: Task): void;
+};
+
+const emits = defineEmits<EmitEvents>()
+//const emits = defineEmits(['task-completed-toggle']);
+
+const props = defineProps({
+  task:{
+    type: Object as PropType<Task>,
+      required: true,
+  }
+})
+
+const  onTaskCompleted = (event: Event) =>{
+  emits("task-completed-toggle",{
+    id: props.task.id,
+    title: props.task.title,
+    completed: (event.target as HTMLInputElement)?.checked,
+  });
+}
+</script>
+```
+
+```jsx
+// emit 타입 선언
+type EmitEvents={
+  (e: 'task-completed-toggle',task: Task): void;
+};
+
+const emits = defineEmits<EmitEvents>()
+```
+
+이렇게 하면 반드시 이벤트에 알맞은 메서드가 바인딩되도록 보장할 수 있다. 이제 모든 이벤트는 task-complete-toggle처럼 다음과 같은 선언 패턴을 따라야 한다.
+
+```jsx
+(e: 'component', [...arguments]):void
+```
+
+이 문법에서 e는 이벤트명이며 arguments는 이벤트 이미터에 전달될 모든 입력 인수다. task-complete-toggle 이벤트의 경우, 인수는 task이며 타입은 Task이다.
+
+emits는 Vue의 데이터 흐름 메커니즘을 거스르지 않고 부모와 자식 컴포넌트 사이에 양방향 통신을 가능케하는 강력한 기능이다. 그러나 props와 emits는 부모 자식 간 직접적인 데이터 통신에 한해 사용할 수 있다.
+
+컴포넌트 데이터를 손자 또는 그보다 하위 컴포넌트로 전달하려면 다른 방식으로 문제에 접근해야 한다. 이어서 provide와 inject API를 통해 컴포넌트에서 자식 또는 손자 컴포넌트로 데이터를 전달하는 방법을 알아보자
