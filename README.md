@@ -2140,3 +2140,410 @@ const emits = defineEmits<EmitEvents>()
 emits는 Vue의 데이터 흐름 메커니즘을 거스르지 않고 부모와 자식 컴포넌트 사이에 양방향 통신을 가능케하는 강력한 기능이다. 그러나 props와 emits는 부모 자식 간 직접적인 데이터 통신에 한해 사용할 수 있다.
 
 컴포넌트 데이터를 손자 또는 그보다 하위 컴포넌트로 전달하려면 다른 방식으로 문제에 접근해야 한다. 이어서 provide와 inject API를 통해 컴포넌트에서 자식 또는 손자 컴포넌트로 데이터를 전달하는 방법을 알아보자
+
+## 4.4 제공/주입 패턴을 이용한 컴포넌트 통신
+
+provide/inject API는 조상 컴포넌트에서 자손으로 데이터 통신을 수립하는 최적의 수단이다. provide 필드는 조상의 데이터를 전달하고, inject는 제공된 데이터를 모든 대상 자손에게 주입하는 역할을 한다.
+
+### 4.4.1 provide와 데이터 전달
+
+컴포넌트 옵션의 provide 필드는 데이터 객체 또는 함수 형식으로 지정할 수 있다.
+
+privide가 데이터 객체일 때, 객체의 각 프로퍼티는 키와 값 형태로 데이터 타입을 표현한다. 아래 예제 에서 ProductList는 모든 자손에게 값이 [1]인 selectedIds 데이터를 제공한다.
+
+```jsx
+<script>
+import { defineComponent } from '@vue/composition-api'
+
+export default defineComponent({
+    setup() {
+        
+    },
+    provide() {
+        return {
+            selectedIds: [1]
+        }
+    }
+})
+</script>
+
+```
+
+- props와 달리 provide 필드에 함수를 지정하면 자손 컴포넌트에서 호출할 수 있다. 이 특성을 이용하면 부모 컴포넌트를 향해 데이터를 되돌려 보내는 것이 가능하다. 그러나 Vue는 이러한 사용 방식을 안티 패턴으로 간주하므로 주의해서 사용해야 한다.
+
+지금까지 배운 부분은 ProductList에서 provide를 통해 특정 데이터 값을 자손에게 전달하는 방법이었다. 다음으로 이렇게 전달된 값을 주입하고 작동시키는 방법을 알아보자.
+
+### 4.4.2 inject와 데이터 수신
+
+props와 마찬가지로 inject 필드는 문자열 배열 (inject: [selectedId]) 또는 객체를 지정한다. 배열의 각 문자열은 provide에 지정된 데이터 키를 가르킨다.
+
+inject에 객체를 지정할 경우. 객체의 각 프로퍼티는 로컬 데이터 키가 된다. 해당 객체는 다음과 같은 필드 구조를 따라야 한다.
+
+```jsx
+{
+	from?: string,
+	default: any
+}
+```
+
+로컬 프로퍼티 키가 조상에서 제공된 데이터 키와 동일할 때는 from을 생략할 수 있다.
+예제에서 ProductList는 selectedIds 데이터를 자손에 제공하며, ProductComp 컴포넌트는 이 데이터를 수신하고 currentSelectedIds로 로컬 이름을 바꾸어 사용한다.
+
+```jsx
+<script>
+import { defineComponent } from '@vue/composition-api'
+
+export default defineComponent({
+    inject:{
+        currentSelectedIds:{
+            from: 'selectedIds',
+            default: []
+        }
+    }
+})
+</script>
+
+```
+
+이 코드에서 Vue는 주입된 selected 값을 가져와 로컬 데이터 필드인 currentSelectedIds에 할당한다. 주입된 값이 없을 경우 기본값으로 []이 지정된다.
+
+브라우저 개발자 도구의 Vue 탭에서 Component 섹션을 조회한 화면이다. 왼쪽 패널의 컴포넌트 트리에서 ProductComp를 선택하면 오른쪽 패널에서 intected 데이터의 이름이 변경된 것을 확인할 수 있다.
+
+```jsx
+injected
+selectedIds ➞ currentSelectedIds:Array[5]
+0:2
+1:2
+2:3
+3:4
+4:5
+
+```
+
+provide와 inject를 적절히 활용하면 props를 드릴링하지 않고도 컴포넌트 사이에서 효율적으로 데이터를 전달할 수 있다. 다음으로 엘리먼트의 특정 콘텐츠 섹셩을 DOM의 특정 위치로 렌더링 시킬 수 있는 Teleport 컴포넌트를 살펴보자
+
+## 4.5 텔레포트 API
+컴포넌트를 구현하다 보면 가끔 스타일 제약 조건에 맞춰 엘리먼트를 모다 두어야 하는 경우가 있다. 이러한 엘리먼트는 컴포넌트 단위가 아닌 전체 화면 효과를 기준으로 DOM의 특정 위치에 렌더링해야 한다. 이렇듯 일부 엘리먼트를 원하는 위치로 ‘순간이동’ 시키는 기능은 대체로 구현하기 복잡하다. 개발 난도가 높고 시간도 오래 걸릴 뿐만 아니라 성능에도 안 좋은 영향을 끼친다. 이러한 순간이동 난제에 대한 해답으로 Vue는 Teleport 컴포넌트를 제시한다.
+
+Teleport 컴포넌트는 to라는 속성으로 이동 대상 컴포넌트를 가리킨다. 이 속성으로 이동 대상 컴포넌트를 가리킨다. 이속성은 쿼리 선택자 또는 실제 HTML 엘리먼트를 담고 있다. Sky and clouds라는 영역을 지닌 House 컴포넌트다. Vue엔진은 이 부분을 #sky로 지정된 DOM 엘리먼트로 이동시킨다.
+
+```jsx
+<template>
+    <div>
+        This is a house
+    </div>
+    <Teleport to="#sky">
+        <div>Sky and clouds</div>
+    </Teleport>
+</template>
+```
+
+```jsx
+<template>
+  <section id="sky" ></section>
+  <section class="wrapper">
+    <House/>
+  </section>
+</template>
+
+<script lang="ts">
+import House from '@/components/do/ch04/4_5_teleport_api/House.vue'
+export default {
+  name: "SkyComponent",
+  components: {House}
+}
+</script>
+
+<style>
+
+</style>
+```
+
+App.vue는 과 같이 House 컴포넌트를 사용한다. 여기에 텔레포트 목적지인 section 엘리먼트를 추가하고 id를 sky로 지정한다.
+
+브라우저 개발자 도구에서 요소 또는 Elements 탭을 열고 DOM 트리를 확인하면 Sky and clouds 영역이 `<section id=”sky’>` 내부로 이동했음 을 알 수 있다. 
+
+```jsx
+<section id="sky"><div>Sky and clouds</div></section>
+<section class="wrapper">
+<div> This is a house </div>
+<!--teleport start--><!--teleport end-->
+</section>
+```
+
+`<Teleport>` 컴포넌트의 disabled 속성에 불리언 값을 지정하면 컴포넌트를 이동시킬 지 말지 동적으로 제어할 수 있다. 이러한 컴포넌트는 DOM 트리를 보존하면서 필요한 순간에 우너하는 컨텐츠만 대상 위치로 이동시키는 편리한 도구다. 다음 절은 Teleport의 가장 일반적인 사용처인 모달 기능을 구현할 것이다.
+
+- [Caution] 두 섹션이 하나의 부모 엘리먼트 하위에 있을 때
+텔레포트의 목적지 컴포넌트는 Teleport가 마운트되기 전에 DOM 안에 존재해야 한다. 두 section이 모두 하나의 main 엘리먼트 안에 있다면 Teleport 컴포넌트가 제대로 작동하지 않는다.
+
+### 4.5.1 Teleport와 <dialog> 엘리먼트를 이용한 모달 구현
+
+모달은 화면에서 가장 전면에 나타난느 대화 상자를 일컫는다. 또한 모달은 사용자와 메인페이지의 상호작용을 차단한다. 사용자는 모달 상호작용을 먼저 처리하고 창을 닫아야 메인페이지로 돌아갈수 있다. 모달은 사용자의 주의를 온전히 집중시켜야 할 중요한 알림을 단 한 번만 표시하려고 할 때 매우 편리하다. 
+
+기본적인 모달을 설계해보자, 일반적인 대화 상자와 비슷하게 모달은 다음과 같은 요소를 포함한다.
+
+- 전체화면을 덮는 배경(backdrop)은 현재 페이지와 사용자의 상호작용을 차단하는 역할을 한다.
+- 제목과 닫기 버튼이 있는 header 콘텐츠가 담긴 main, 통상적인 닫기 버튼이 있는 footer 섹션은 slot을 이용해 커스터 마이징 한다.
+
+ 
+
+```jsx
+ <template>
+    <dialog :open="open">
+        <header>
+            <slot name="m-header">
+                <h2>{{ title }}</h2>
+                <button>X</button>
+            </slot>
+        </header>
+        <main>
+            <slot name="m-main"></slot>
+        </main>
+        <footer>
+            <slot name="m-footer">
+                <button>Close</button>
+            </slot>
+        </footer>
+    </dialog>
+</template>
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+    name: 'ModalComponent',
+    props:{
+        open:{
+            type:Boolean,
+            default:false
+        },
+        title:{
+            type:String,
+            default: 'Dialog',
+        },
+    }
+})
+</script>
+
+```
+
+이 템플릿에서 사용자는 다음과 같이 3개의 슬롯을 커스터마이징 할 수 있다.
+
+1. 모달 헤더(m-header)
+2. 메인 컨텐츠(m-main)
+3. 모달 푸터(m-footer)
+
+`<dialog>` 엘리먼트는 open 속성으로 모달의 가시성(visibility)를 제어한다. 이 속성은 데이터 prop인 open에 바인딩한다. 또한 모달의 기본 제목으로 렌더링할 title prop도 추가한다. open과 title이라는 두 prop을 추가한 Modal 컴포넌트 옵션이다.
+
+```jsx
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+    name: 'ModalComponent',
+    props:{
+        open:{
+            type:Boolean,
+            default:false
+        },
+        title:{
+            type:String,
+            default: 'Dialog',
+        },
+    }
+})
+</script>
+```
+
+사용자가 닫기 버튼이나 X버튼을 누르면 모달이 닫혀야 한다. 모달의 가시성은ㅇ open prop으로 제어하므로 modal의 부모 컴포넌트에서 open값을 변경하고 closeDialog 이벤트를 발생시켜야 한다. 이 이벤트를 발생시키는 emits와 close 메서드를 선언한다.
+
+```jsx
+<template>
+    <dialog :open="open">
+        <header>
+            <slot name="m-header">
+                <h2>{{ title }}</h2>
+                <button @click="close">X</button>
+            </slot>
+        </header>
+        <main>
+            <slot name="m-main"></slot>
+        </main>
+        <footer>
+            <slot name="m-footer">
+                <button @click="close">Close</button>
+            </slot>
+        </footer>
+    </dialog>
+</template>
+```
+
+다음으로 dialog 엘리먼트를 <Teleport> 컴포넌트로 감싸고 부모 컴포넌트의 DOM 트리 밖으로 이동 시켜야 한다. 이동 위치는 id가 modal인 HTML엘리먼트이며 이 정보를 Teleport 컴포넌트에 to prop으로 지정한다. 마지막으로 Vue가 모달 컨텐츠 이동 여부를 제어할 수 있도록 disabled prop과 open 값을 바인딩한다.
+
+```jsx
+<template>
+  <h2>With Modal components</h2>
+  <button @click="openModal = true">Open Modal</button>
+  <NoticeModal 
+    :open="openModal" 
+    title="Hello World" 
+    @closeDialog="toggleModal"/>
+</template>
+
+<script lang="ts">
+  import { defineComponent } from 'vue';
+  import NoticeModal from '@/components/do/ch04/4_5_teleport_api/4_1_1_dialog/NoticeModal.vue'
+
+  export default defineComponent({
+    name: "TeleportComponent",
+    components: {NoticeModal},
+    data() {
+      return{
+        openModal: false,
+      }
+    },
+    methods:{
+      toggleModal(newValue: boolean){
+        this.openModal = newValue;
+      }
+    }
+  })
+</script>
+
+<style>
+
+</style>
+```
+
+index.html 파일의 body div 엘리먼트를 추가하고 `id="modal"` 을 추가한다.
+
+```jsx
+ <template>
+  <MyComponent />
+  <div id="modal"></div>
+</template>
+```
+
+id가 modal인 div는 텔레포트 목적지 엘리먼트다. open prop이 true로 바뀔 때마다 vue는 이 div에 modal 텔레포트 컴포넌트를 렌더링한다. 
+
+```jsx
+<div id="modal">
+<dialog open="">
+<header>
+<h2>Hello World</h2>
+<button>X</button></header
+><main></main><footer>
+<button>Close</button></footer>
+</dialog>
+</div>
+```
+
+open prop이 false일 때는 div 내부가 비어 있다.
+
+```jsx
+<div id="modal"></div>
+```
+
+모달 컴포넌트가 작동하기 시작했지만 모달의 시각적 효과는 아직 부족한면 있다. 모달이 나타날 때 메인 페이지 컨텐츠에는 어두운 오버레이가 깔려야 한다 이 문제는 CSS 스타일로 해결할 수 있다. 
+
+```jsx
+<style scoped>
+    dialog::backdrop{
+        background-color: rgba(0,0,0,0.5)
+    }
+</style>
+```
+
+그러나 이렇게 스타일만 추가해서는 모달 배경이 바뀌지 않는다. 브라우저는 dialog.show-modal() 메서드로 모달을 열었을 때만  ::backdrop 선택자를 적용하기 때문이다. 브라우저의 이러한 작동은 open 속성값의 영향을 받지 않는다. 따라서 스타일이 작동하게 하려면 다음과 같이 수정해야 한다.
+
+`<dialog>`엘리먼트를 직접 참조할 수 있도록 ref 속성에 “dialog”를 할당한다. 
+
+```jsx
+        <dialog ref="dialog">
+```
+
+watch에 open을 추가하고 값이 바뀔 때마다 $refs.dialog.showModal() 또는 $refs.dialog.close()를 알맞게 호출한다.
+
+```jsx
+        watch:{
+        open(newValue){
+            const element = this.$refs.dialog as HTMLDialogElement;
+
+            
+            if (element && element.showModal) {
+                if(newValue){
+                    console.log(newValue);
+                    element.showModal();
+                }else{
+                    element.close();
+                }
+            }
+        }
+    }
+```
+
+dialog 엘리먼트의 open 속성의 바인딩을 제거한다
+
+```jsx
+//<dialog :open="open" ref="dialog">
+<dialog ref="dialog">
+```
+
+teleport 컴포넌트에서 disabled 속성을 제거한다.
+
+```jsx
+<teleport to="#modal" >
+```
+
+dialog 엘리먼트의 내장 메서드인 showModal()로 모달을 열면 브라우저는 실제 dialog 엘리먼트에 ::backdrop 가상 선택자를 추가한다. 엘리먼트를 동적으로 목적지에 옮기면브라우저의 이러한 기능이 작동하지 않고 backdrop 스타일도 적용되지 않는다. 다음은 모달 위치를 페이지 중앙에 고정하고 가장 전면에 노출되도록 순서를 재배치하는 CSS 규칙이다.
+
+```jsx
+<style scoped>
+    dialog{
+        position: fixed; z-index: 999;
+        inset-block-start: 30%;
+        inset-inline-start: 50%; width: 300px;
+        margin-inline-start: -150px;
+    }
+</style>
+```
+
+지금까지 Telport로 재사용 Modal 컴포넌트를 구현하고 `dialog` 엘리먼트의 내장 기능과 다양한 활용법을 살펴봤다. 또한 ::backdrop CSS 선택자로 모달 배경 스타일을 지정하는 방법도 배웠다.
+
+지금까지 모달을 표시할 대상 div는 body의 자식 엘리먼트인 동시에 Vue앱의 엔트리 엘리먼트인 `<div id=”app>` 외부에 있었다. 그렇다면 모달의 대상 div를 app.vue 엔트리 컴포넌트 내부로 옮기면 무슨 일이 벌어질까? 
+
+### 4.5.2 텔레포트 렌더링 제한
+
+App.vue의 자식 컴포넌트에서 Teleport로 모달을 렌더링하려 시도하면 문제가 발생한다.
+
+```jsx
+main.ts:27 [Vue warn]: Failed to locate Teleport target with selector "#modal". Note the target element must exist before the component is mounted - i.e. the target cannot be rendered by the component itself, and ideally should be outside of the entire Vue component tree. 
+  at <NoticeModal open=false title="Hello World" onCloseDialog=fn<bound toggleModal> > 
+  at <TeleportComponent > 
+  at <App>
+(anonymous)	@	main.ts:27
+
+```
+
+vue의 렌더링 메커니즘에 따르면 부모 컴포넌트는 자식 컴포넌트를 발견하면 자식의 렌더링이 끝날 때까지 대기하다가 완료되고 나서야 자신을 계속 렌더링한다. 또한 자식 엘리먼트의 부모의 template 섹션에 등장하는 순서대로 렌더링된다. 방금 예시에서 Vue는 
+`WithModalComponent` 를 렌더링하여 `<dialog>` 를 부모 컴포넌트에 있는 목적지로  텔레포트하려 시도한다. 그런나 부모 컴포넌트는 WithModalComponent가 렌더링 할 때 까지 기다리고 있으므로 `<div id="modal">` 엘리먼트는 아직 DOM에 존재하지 않는다. 결과적으로 vue의 목적지인 `<div id="modal>"` 로 `<dialog>` 를 올바르게 이동시킬 수 없으며 에러가 발생한다.
+
+다음과 같이 `<div id =”modal>` 을  WithModalComponent보다 앞에 두면 우회적으로 해결할 수 있다.
+
+```jsx
+<template>
+  <div id="modal"></div>
+  <WithModalComponent/>
+</template>
+```
+
+이 방식은 Vue가 Modal 엘리먼트를 렌더링하고 내용을 이동시키기 이전에 반드시 div가 존재하도록 보장하는 방법이다. 또다른 방안으로 disabled 속성을 이용하여 이동 시점을 연기하는 방법도 있다. 이 방식은 사용자가 Open Modal 버튼을 클릭할 때만 텔레포트가 작동한다. 양쪽 모두 장단점이 있으므로 상화에 따라 적합한 방법을 선택하길 바란다.
+
+가장 일반적인 해결책은 대상 엘리먼트를 body 엘리먼트의 직속으로 배치 함으로써 Vue 렌더링 컨텐스트로 부터 대상을 완전히 격리하는 것이다.
+
+`<Teleport>`를 응용하면 전체 화면 모드, 모달, 사이드바 등의 시각적 효과를 극대화 할 수 있다. 그와 동시에 코드 체계 컴포넌트 격리 구조, 구독성 등의 특성은 고스란히 유지 할 수 있다는 점은 `<Teleport>` 의 큰 장점이다.
+
+## 정리
+
+이번장에서  Vue에 내장된 props, emits, provide/inject 등의 기능과 컴포넌트 통신의 다양한 개념을 살펴보았다, Vue의 데이터 흐름 메커니즘을 거스르지 않으면서 컴포넌트 간 데이터와 이벤트를 전달하는 방법도 배웠다. 또한 부모 컴포넌트의 `<template>` 구조를  유지하면서 텔레포트 API로 DOM 트리 외부에 엘리먼트를 렌더링할 수 있었다. `<Teleport>` 는 팝업, 대화상자, 모달 처럼 메인 페이지 엘리먼트와 나란히 표시할 요소를 컴포넌트로 구성할 때 필수적이다.
+
+다음 장에서는 컴포지션 API를 자세히 알아보고 이를 이용해 Vue 컴포넌트를 구성하는 방법을 살펴볼 것이다.
