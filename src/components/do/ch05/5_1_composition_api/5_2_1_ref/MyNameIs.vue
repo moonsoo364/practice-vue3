@@ -5,12 +5,8 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import { ref } from 'vue'
-export default {
-  setup() {
-    const message = ref('Hello, Vue 3!')
-    return { message }
-  },
-}
+
+const message = ref('Hello, Vue 3!')
 </script>
