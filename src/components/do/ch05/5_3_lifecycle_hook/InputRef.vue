@@ -1,15 +1,17 @@
 <template>
     <div>
-        <input v-model="message" type="text" ref="inputRef" />
+        <input type="text" ref="inputRef" />
     </div>
 </template>
 <script lang="ts" setup>
     import { onMounted, onUpdated, ref } from 'vue'
     const inputRef = ref(null)
-    const message = ref('')
+    onMounted(() => {
+        console.log(' Dom instance: ',inputRef.value); // null
+    })
 
     onUpdated(() => {
-        console.log(' Dom instance after updated: ',inputRef.value); // null  
+        console.log(inputRef.value); // null
     })
 
     onMounted(() => {

@@ -2547,3 +2547,284 @@ vue의 렌더링 메커니즘에 따르면 부모 컴포넌트는 자식 컴포�
 이번장에서  Vue에 내장된 props, emits, provide/inject 등의 기능과 컴포넌트 통신의 다양한 개념을 살펴보았다, Vue의 데이터 흐름 메커니즘을 거스르지 않으면서 컴포넌트 간 데이터와 이벤트를 전달하는 방법도 배웠다. 또한 부모 컴포넌트의 `<template>` 구조를  유지하면서 텔레포트 API로 DOM 트리 외부에 엘리먼트를 렌더링할 수 있었다. `<Teleport>` 는 팝업, 대화상자, 모달 처럼 메인 페이지 엘리먼트와 나란히 표시할 요소를 컴포넌트로 구성할 때 필수적이다.
 
 다음 장에서는 컴포지션 API를 자세히 알아보고 이를 이용해 Vue 컴포넌트를 구성하는 방법을 살펴볼 것이다.
+
+# 250507 5.1 컴포지션 API를 통한 컴포넌트 설정 ~
+
+## 5.1 컴포지션 API를 통한 컴포넌트 설정
+Vue 컴포넌트를 구성할 때는 통상적으로 옵션 API를 사용한다. 그러나 데이터와 메서드가 중복될 염려 없이
+컴포넌트 로직 일부를 재사용한다면 옵션 API만으로는 역부족이다. 컴포지션 API는 믹스인을 접목할 수 있어
+이러한 요건에 부합하며 가독성과 체계성도 더 좋다. Vue3부터 도입된 컴포지션 API는 setup()훅 또는 `<script setup>` 태그로 반응형 컴포넌트를 구성한다. setup() 혹은 컴포넌트 옵션 객체의 일부이며 컴포넌트 인스턴스 최초 생성 이전(beforeCreate() 훅)에 한 번 실행한다.
+
+컴포지션 API 함수 또는 컴포지블은 setup 혹은 그에 상응하는 <script setup> 태그 안에서만 사용된다. 이러한 방식으로 상태형 기능 컴포넌트를 생성하거나 컴포넌트의 반응형 상태와 메서드를 편리하게 정의할 수 있다. 또한 더욱 간결하고 읽기 쉬운 코드로 라이프사이클 훅을 정의할 수 있다.
+
+컴포지션 API의 위력을 확인하기 위해 컴포넌트의 반응형을 처리하는 ref와 reactive함수를 컴포지션 API에 도입했다.
+
+### 5.2.1 ref()
+
+ref()는 하나의 인수를 초기값으로 받아 반응형 객체를 반환하는 함수다. 이러한 반환 객체를 ref 객체라 부른다. 반환 객체의 현재 값은 script 섹션에서 value라는 프로퍼티로 접근할 수 있다. 가령 초기값이 Hello World인 반응형 객체를 생성한다.
+
+- setup 훅과 옵션 API를 사용할 때는 컴포넌트에서 .value 없이 message에 접근할 수 있다. 즉 message만 쓰면 된다.
+- `setup`이 없으면 Vue는 Composition API를 사용하지 않고 Options API를 사용한다고 가정한다.
+
+```jsx
+<template>
+  <div>{{ message }}</div>
+</template>
+
+<script lang="ts" setup>
+import { ref } from 'vue'
+
+const message = ref('Hello, Vue 3!')
+
+console.log('message:', message.value)
+</script>
+
+```
+
+template 태그에는 value 프로퍼티 없이 해당 값을 직접사용할 수 있다. 아래는 message를 브라우저에 출력한다.
+
+- ref() 함수는 전달받은 초기값에서 반환 객체의 타입을 추론한다. 반환 객체의 타입을 명시적으로 정의하려면 `ref<string>()`처럼 타입 스크립트의 `ref<type>` 구문으로 함수를 실행해야 한다.
+
+ref 객체는 반응형이며 value 프로퍼티에 값을 할당하는 방식으로 변경할 수 있다. 변화를 감지한 Vue 엔진은 객체의 와처를 실행하고 컴포넌트를 업데이트한다.
+
+아래는 사용자의 입력을 받아 출력 메시지를 변경하는 예제다
+
+```jsx
+<template>
+  <div>
+    <h2 class="heading">{{ message }}</h2>
+    <input type="text" v-model="message" />
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { ref } from 'vue'
+
+const message = ref('Hello, Vue 3!')
+</script>
+
+```
+
+input 필드값을 고치면 브라우저에 표시되는 message도 똑같이 바뀐다. 개발자도구 vue탭에서 보면 ref 객체의 message가 나열되고 Ref라는 표시가 붙는다.
+
+```jsx
+message : 안녕하세요(Ref)
+
+```
+
+예제에서는 title이라는 정적 데이터를 컴포넌트에 추가했다. Vue 데브툴을 보면 title프로퍼티가 추가됐지만 Ref 표시는 없다.
+
+아래는 setup 훅 방식으로 동일하게 작성된 코드다.
+
+```jsx
+<template>
+  <div>
+    <h2 class="heading">{{ message }}</h2>
+    <input type="text" v-model="message" />
+  </div>
+</template>
+
+<script lang="ts">
+import { ref } from 'vue'
+export default {
+  setup() {
+    const message = ref('Hello, Vue 3!')
+    return { message }
+  },
+}
+</script>
+
+```
+
+string, number, boolean, null, undefined 등의 모든 우너시 타입은 ref()함수로 반응형 객체를 생성할 수 있다. 그러나 배열이나 객체를 반환할 때는 ref()가 특히 강한 반응형 객체를 생성한다. 그러나 배열이나 객체를 반환할 때는 ref가 특히 강ㅅ한 반응형 객체를 생성한다. ref객체에 소속된 프로퍼티가 반응형으로 설정된다는 뜻이다. 
+
+```jsx
+<script lang="ts" setup>
+import {shallowRef} from 'vue';
+
+type User={
+  name: string;
+  bio: string;
+  avatar_url: string;
+  twitter_username: string;
+  blog: string;
+};
+
+//1
+const user = shallowRef<User>({
+    name:"",
+    bio: "",
+    avatar_url: "",
+    twitter_username: "",
+    blog: "",
+});
+//2
+const error = shallowRef<Error | undefined>();
+
+const fetchData = async () =>{
+    
+    try{
+        const response = await fetch("https://api.github.com/users/mayashavin");
+        //3
+        if(response.ok){
+            user.value = (await response.json()) as User;
+        }
+    }catch(e){
+        //4
+        error.value = e as Error;
+    }
+    
+}
+
+fetchData();
+</script>
+```
+
+1. shallowRef에 초기 데이터를 전달해 User 타입의 반응형 변수 user를 만든다.
+2. shallowRef로 undifined 또는 Error 타입의 반응형 변수 Error를 만든다.
+3. 응답데이터 타입을 User 타입으로 간주하고 user값을 교체한다.
+4. 에러가 발생하면 error를 업데이트한다.
+
+### 5.2.2 reactive()
+
+reactive() 함수는 ref()함수와 비슷하지만 다음과 같은 차이가 있다.
+
+- 객체 타입 데이터를 인수로 받는다.
+- value나 프로퍼티를 통하지 않고 반응형 반환 객체에 직접 접근할 수 있다.
+
+```jsx
+<script lang="ts" setup>
+import {reactive} from 'vue';
+
+const user = reactive({
+    name:"",
+    age: 0,
+});
+
+user.name="Rachel";
+user.age= 30;
+
+</script>
+```
+
+- ref() 내부에서 reactive를 실행한다.
+
+한가지 중요한 점은 reactive() 함수가 반응형 프록시 객체를 만들어 반환한다는 것이다. 따라서 반응형 반환 객체를 변경하면 원본 객체에 반영되며 반대도 마찬가지다.
+
+```sql
+<script lang="ts" setup>
+import { reactive } from 'vue'
+
+const defaultIser ={
+    name: 'maya',
+    age: 20,
+}
+
+const user = reactive(defaultIser)
+
+user.name='Rachel'
+user.age= 30
+
+console.log(user.name) // Rachel
+console.log(user.age) // 30
+defaultIser.name = 'Samuel'
+
+console.log(user);
+
+</script>
+
+```
+
+이 예제에서 defaultValue나 user의 프로퍼티를 변경하면 나머지 한 쪽의 프로퍼티도 변경된다. reactive() 함수를 사용할 때는 이러한 특성에 각별히 주의해야 한다. reactive()에 객체를 전달할 때 아래처럼 처음부터 전개구문으로 새로운 객체를 생성하는 방법도 있다.
+
+```sql
+<script lang="ts" setup>
+import { reactive } from 'vue'
+
+const defaultIser ={
+    name: 'maya',
+    age: 20,
+}
+
+const user = reactive({...defaultIser})
+
+user.name='Rachel'
+user.age= 30
+
+console.log(user.name) // Rachel
+console.log(user.age) // 30
+defaultIser.name = 'Samuel'
+
+console.log(user);
+
+</script>
+
+```
+
+- reactive() 함수를 사용하면 초기 객체에 심층적인(profound) 반응성이 부여된다. 따라서 대규모 데이터 구조에서 의도치 않게 성능이 저하될 위험이 있다. 객체 최상위 프로퍼티만 관찰하고 그 이하를 볼 필요가 없을 때는 shallowReactive 함수를 사용하는 것이 좋다.
+
+ref()나 reactive() 안에서 둘을 다시 호출하는 것도 가능하지만 매우 복잡해질 뿐만 아니라 반응성 언래핑 메커니즘까지 고려해야 하므로 권장하지 않는다. 반응형 객체를 이용해 또다른 반응형 객체를 생성하려 할 때는 computed() 를 사용하는 것이 좋다.
+
+| 훅 | 사용예 |
+| --- | --- |
+| ref() | 원시 데이터 타입을 다루는 일반적인 상황 또는 자신의 프로퍼티를 모두 재할당할 수 있는 객체 타입이 필요할 때 |
+| shallowRef() | 프로퍼티를 관찰할 필요가 없고 재할당이 예정된 자리표시자 객체가 필요할 때 |
+| reactive() | 객체 타입 데이터의 프로퍼티와 중첩 프로퍼티를 모두 관찰해야 할 때 |
+| shallowReactive() | 객체 타입 데이터의 프로퍼티를 관찰하지만 중첩 프로퍼티는 관찰할 필요가 없을 때 |
+
+## 5.2 라이프사이클 훅
+
+컴포지션 API의 라이프 사이클 훅은 on이라는 접두어가 붙는다는 점을 제외하면 옵션 API의 훅과 거의 비슷하다. 가령 mounted는 컴포지션 API에서 onMounted에 해당한다. 아래는 옵션API와 컴포지션 API의 라이프 사이클 훅을 비교 정리한 것이다.
+
+| option | composition | 설명 |
+| --- | --- | --- |
+| beforeMount() | onBeforeMount() | 컴포넌트의 최초 렌더링 이전에 호출한다. |
+| mounted() | onMounted() | Vue가 컴포넌트를 렌더링하고 DOM에 마운팅한 이후에 호출한다. |
+| beforeUpdate() | onBeforeUpdate() | 컴포넌트의 업데이트 프로세스가 시작한 이후에 호출한다. |
+| updated() | onUpdated() | 업데이트된 컴포넌트를 DOM에 렌더링한 이후에 호출한다. |
+| beforeUnmount()  | onBeforeUnmount() | 컴포넌트를 언마운트하기전에 호출한다. |
+| unmounted() | onUnmounted() | 컴포넌트 인스턴스를 제거하고 파괴한 이후에 호출한다. |
+
+beforeCreated와 created훅은 컴포지션 API에 없다 대신 setup으로 동일한 효과를 내며 컴포넌트 로직을 더욱 체계적으로 정의할 수 있다.
+
+컴포지션 API는 라이프 사이클 혹은 함수를 인수로 받는다. Vue는 이 함수를 콜백으로 등록 했다가 알맞은 시점에 실행한다. 
+
+```sql
+<script lang="ts" setup>
+    import { onBeforeMount } from 'vue'
+
+    onBeforeMount(() => {
+        console.log('onBeforeMount')
+        console.log('onBeforeMount', this)
+    })
+</script>
+```
+
+Vue는 setup()을 컴포넌트 인스턴스 생성 전에  실행하므로 setup() 또는 그안에서 등록된 콜백에서 this 인스턴스에 접근할 수 없다. 따라서 위 예제에서 this는 undefined가 출력된다.
+
+그러나 ref() ref디렉티브를 이용하면 마치 옵션 API의 this.$el과 비슷하게 컴포넌트 dom 인스턴스에 접근할 수 있다.
+
+```sql
+<template>
+    <div>
+        <input v-model="message" type="text" ref="inputRef" />
+    </div>
+</template>
+<script lang="ts" setup>
+    import { onMounted, onUpdated, ref } from 'vue'
+    const inputRef = ref(null)
+    const message = ref('')
+
+    onUpdated(() => {
+        console.log(' Dom instance after updated: ',inputRef.value); // null  
+    })
+
+    onMounted(() => {
+        console.log(' Dom instance: ',inputRef.value); // null        
+    })
+</script>
+```
+
+컴포넌트가 마운팅되면 inputRef는 input 엘리먼트에 해당하는 DOm 인스턴스를 참조하게 된다. 사용자가 input필드를 변경할 때 마다 Vue는 onUpdated() 훅을 실행하고 그에 따라 DOM 인스턴스가 업데이트된다.
+
+컴포지션 API의 라이프사이클 훅은 옵션API보다 활용 범위가 넓다 라이프 사이클 훅을 조합해 한층 복잡한 로직을 만들고 자신만의 재사용 커스텀 훅을 만드는 것도 가능하다.
