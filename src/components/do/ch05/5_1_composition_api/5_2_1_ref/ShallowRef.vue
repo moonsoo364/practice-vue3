@@ -9,7 +9,6 @@ type User={
   blog: string;
 };
 
-//1
 const user = shallowRef<User>({
     name:"",
     bio: "",
@@ -17,19 +16,17 @@ const user = shallowRef<User>({
     twitter_username: "",
     blog: "",
 });
-//2
+
 const error = shallowRef<Error | undefined>();
 
 const fetchData = async () =>{
     
     try{
         const response = await fetch("https://api.github.com/users/mayashavin");
-        //3
         if(response.ok){
             user.value = (await response.json()) as User;
         }
     }catch(e){
-        //4
         error.value = e as Error;
     }
     
