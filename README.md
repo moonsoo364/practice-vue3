@@ -2828,3 +2828,219 @@ Vue는 setup()을 컴포넌트 인스턴스 생성 전에  실행하므로 setup
 컴포넌트가 마운팅되면 inputRef는 input 엘리먼트에 해당하는 DOm 인스턴스를 참조하게 된다. 사용자가 input필드를 변경할 때 마다 Vue는 onUpdated() 훅을 실행하고 그에 따라 DOM 인스턴스가 업데이트된다.
 
 컴포지션 API의 라이프사이클 훅은 옵션API보다 활용 범위가 넓다 라이프 사이클 훅을 조합해 한층 복잡한 로직을 만들고 자신만의 재사용 커스텀 훅을 만드는 것도 가능하다.
+# 250508 5.3 라이프사이클 훅 ~ 5.4 컴포지션 API의 와처
+
+## 5.3 라이프사이클 훅
+
+컴포지션 API의 라이프 사이클 훅은 on이라는 접두어가 붙는다는 점을 제외하면 옵션 API의 훅과 거의 비슷하다. 가령 mounted는 컴포지션 API에서 onMounted에 해당한다. 아래는 옵션API와 컴포지션 API의 라이프 사이클 훅을 비교 정리한 것이다.
+
+| option | composition | 설명 |
+| --- | --- | --- |
+| beforeMount() | onBeforeMount() | 컴포넌트의 최초 렌더링 이전에 호출한다. |
+| mounted() | onMounted() | Vue가 컴포넌트를 렌더링하고 DOM에 마운팅한 이후에 호출한다. |
+| beforeUpdate() | onBeforeUpdate() | 컴포넌트의 업데이트 프로세스가 시작한 이후에 호출한다. |
+| updated() | onUpdated() | 업데이트된 컴포넌트를 DOM에 렌더링한 이후에 호출한다. |
+| beforeUnmount()  | onBeforeUnmount() | 컴포넌트를 언마운트하기전에 호출한다. |
+| unmounted() | onUnmounted() | 컴포넌트 인스턴스를 제거하고 파괴한 이후에 호출한다. |
+
+beforeCreated와 created훅은 컴포지션 API에 없다 대신 setup으로 동일한 효과를 내며 컴포넌트 로직을 더욱 체계적으로 정의할 수 있다.
+
+컴포지션 API는 라이프 사이클 혹은 함수를 인수로 받는다. Vue는 이 함수를 콜백으로 등록 했다가 알맞은 시점에 실행한다. 
+
+```sql
+<script lang="ts" setup>
+    import { onBeforeMount } from 'vue'
+
+    onBeforeMount(() => {
+        console.log('onBeforeMount')
+        console.log('onBeforeMount', this)
+    })
+</script>
+```
+
+Vue는 setup()을 컴포넌트 인스턴스 생성 전에  실행하므로 setup() 또는 그안에서 등록된 콜백에서 this 인스턴스에 접근할 수 없다. 따라서 위 예제에서 this는 undefined가 출력된다.
+
+그러나 ref() ref디렉티브를 이용하면 마치 옵션 API의 this.$el과 비슷하게 컴포넌트 dom 인스턴스에 접근할 수 있다.
+
+```sql
+<template>
+    <div>
+        <input v-model="message" type="text" ref="inputRef" />
+    </div>
+</template>
+<script lang="ts" setup>
+    import { onMounted, onUpdated, ref } from 'vue'
+    const inputRef = ref(null)
+    const message = ref('')
+
+    onUpdated(() => {
+        console.log(' Dom instance after updated: ',inputRef.value); // null  
+    })
+
+    onMounted(() => {
+        console.log(' Dom instance: ',inputRef.value); // null        
+    })
+</script>
+```
+
+컴포넌트가 마운팅되면 inputRef는 input 엘리먼트에 해당하는 DOm 인스턴스를 참조하게 된다. 사용자가 input필드를 변경할 때 마다 Vue는 onUpdated() 훅을 실행하고 그에 따라 DOM 인스턴스가 업데이트된다.
+
+컴포지션 API의 라이프사이클 훅은 옵션API보다 활용 범위가 넓다 라이프 사이클 훅을 조합해 한층 복잡한 로직을 만들고 자신만의 재사용 커스텀 훅을 만드는 것도 가능하다.
+
+## 5.4 컴포지션 API의 와처
+
+옵션 API의 watch()와 마찬가지로 컴포지션 API의 watch() 혹은 반응형 데이터의 변화를 관찰하고 콜백을 호출하는 용도로 사용한다. watch()는 세 개의 인수를 받고 문법은 다음과 같다.
+
+```jsx
+<script lang="ts" setup>
+watch(
+    sources: WatchSouce,
+    cb: (newValue: T, oldValue: T, cleanup:(func)=>void) => any,
+    options?:WatchOptions
+): WatchStopHandle
+</script>
+```
+
+- sources는 Vue가 관찰할 반응형 데이터다 데이터 일부 조각 또는 반응형 데이터를 반환하는 getter함수이며, 이들을 배열로 지정할 수 있다.
+- cb는 sources가 변경될 때 Vue가 실행할 콜백 함수다. 이 함수의 핵심 인수는 newValue와 oldValue다. 다음 번 호출에 대비해 부수 효과를 정리하려면 cleanup 함수를 추가로 지정한다.
+- options는 Watch혹의 선택적 설정 옵션이며 필드 목록은 아래 표에 나열되어 있다.
+
+|  프로퍼티 | 설명 | 허용타입 | 기본값 | 필수 |
+| --- | --- | --- | --- | --- |
+| deep | 대상 데이터에 중첩 프로퍼티가 있을 때 이에 대한 관찰 여부를 지정한다. | boolean | false | N |
+| immediate | 컴포넌트 탑재 후 핸들러 즉시 실행 여부를 지정한다. | boolean | false | N |
+| flush | 핸들러 실행 시점을 지정한다. 기본적으로 Vue는 컴포넌트 업데이트 전에 핸들러를 실행한다. | pre, post, sync | pre | N |
+| onTrack | 반응형 데이터 추적 함수, 디버깅에 사용하며 개발 모드 전용이다. | 함수 | undefined | N |
+| onTrigger | 콜백 트리거 시 호출하는 함수, 디버깅에 사용하며 개발 모드 전용이다. | 함수 | undefined | N |
+
+watch()가 반환하는 WatchStopHandle 함수를 실행하면 언제든지 해당 와처를 중지할 수 있다.
+
+기본 user 객체에서 user.name과 user.age를 수정하는 예시이다. 이 템플릿을 그대로 가져와 UserWatcherComponent를 실습해보자. <script> 영역은 아래와 같이 컴포지션 API로 작성할 것이다.
+
+```jsx
+<template>
+    <div>
+        <h2>Watch User Name</h2>
+        <p>Name: {{ user.name }}</p>
+        <p>Age: {{ user.age }}</p>
+        <button @click="user.name = 'newName'">Change Name</button>
+        <button @click="user.age++">Increase Age</button>
+    </div>
+</template>
+<script setup lang="ts">
+import {reactive,watch} from 'vue'
+
+interface User {
+    name: string
+    age: number
+}
+
+const user = reactive<User>({
+    name: 'maya',
+    age: 20,
+})
+
+watch(
+    () => user.name,
+    (newValue, oldValue) => {
+        console.log('name changed from', oldValue, 'to', newValue)
+    },
+    { immediate: true }//undefined -> maya 로그 출력
+)
+
+</script>
+
+```
+
+기본적으로 Vue는 user가 변경될 때만 콜백 함수를 실행한다. 그러나 reactive()로 user를 생성하므로 Vue는 자동으로 deep을 활성화하고 모든 프로퍼티를 관찰한다. Vue가 user.name 등의 특정 프로퍼티만 관찰하게 하려면 해당 프로퍼티를 반환하는 getter함수를 만들고, 이를 watch의  sources 인수로 전달하면 된다.
+
+아래 예제에서 user.name 혹은 user.age 가 변경되면 와처가 실행되고 콘솔 로그에 변경 내역이 출력된다.
+
+- 여러 데이터를 관찰하고 관련 작업을 처리할 때는 watchEffect()를 쓰는 것이 낫다. 이 함수 내부에서 사용된 모든 반응형 의존성은 자동으로 추적된다. 또한 컴포넌트 렌더링 직후 최초로 실행되며 의존성 항목의 값이 변경될 때마다 재실행된다. 그러나 의존성 범위가 넓고 이들 간에 업데이트 빈도가 높다면 성능에 영향을 미칠 우려가 있다.
+
+```jsx
+ <template>
+    <div>
+        <h2>Watch User Name</h2>
+        <p>Name: {{ user.name }}</p>
+        <p>Age: {{ user.age }}</p>
+        <button @click="user.name = 'newName'">Change Name</button>
+        <button @click="user.age++">Increase Age</button>
+    </div>
+</template>
+<script setup lang="ts">
+import {reactive,watch} from 'vue'
+
+interface User {
+    name: string
+    age: number
+}
+
+const user = reactive<User>({
+    name: 'maya',
+    age: 20,
+})
+
+watch(
+    [() => user.name, () => user.age],
+    ([newName, newAge], [oldName, oldAge]) => {
+        console.log('name changed from', oldName, 'to', newName)
+        console.log('age changed from', oldAge, 'to', newAge)
+    },
+    { immediate: true }
+)
+
+</script>
+
+```
+
+watch() 혹은 특정 반응형 데이터나 프로퍼티를 관찰하고 동적으로 처리할 수 있는 훌륭한 도구다. 그러나 기존 반응형 데이터를 바탕으로 새로운 반응형 데이터를 생성할 때는 computed()를 사용해야 한다.
+
+## 5.5 computed()
+computed 프로퍼티와 마찬가지로 computed() 또한 특정 반응형 데이터를 바탕으로 새로운 반응형 데이터와 캐시 데이터 값을 생성한다. ref() 또는 reactive()와 달리 computed()는 읽기 전용 참조 객체를 반환한다. 다시 말해 값을 직접 재할당할 수 없다.
+
+옵션 API로 작성된 computed()를 훅 방식으로 고치면 다음과 같다.
+
+```jsx
+<script lang="ts" setup>
+import { computed, ref} from 'vue';
+
+const message = ref('Hello, Vue 3!');
+const reversedMessage = computed<string>((
+    () => message.value.split('').reverse().join('')
+));
+
+</script>
+```
+
+computed()는 script 섹션에서 객체를 반환하며, 이 객체는 ref()나 reactive()처럼 value 프로퍼티를 통해 (reversedMessage.value) 값에 접근한다.
+
+아래는 comptuted() 를 이용하여 reversedMessage를 가져와 message가 회문인지 확인하는 예제이다.
+
+```jsx
+<template>
+    <div>
+        <h2>Palindrome Checker</h2>
+        <p>Message: {{ message }}</p>
+        <p>Reversed Message: {{ reversedMessage }}</p>
+        <p v-if="isPalindrome">The message is a palindrome!</p>
+        <p v-else>The message is not a palindrome.</p>
+        <input v-model="message" placeholder="Type a message" />
+    </div>
+</template>
+<script lang="ts" setup>
+import { computed, ref} from 'vue';
+
+const message = ref('Hello, Vue 3!');
+const reversedMessage = computed<string>((
+    () => message.value.split('').reverse().join('')
+));
+const isPalindrome = computed<boolean>(
+    () => message.value === reversedMessage.value
+)
+</script>
+```
+
+이 예제는 타입 추론 에러를 방지하기 위해 reversedMessage와 isPalidrome의 타입을 명시적인 string과 boolean으로 선언한다.
+
+- computed()는 기본적으로 읽기 전용 반응형 데이터 참조를 반환한다. 그럼에도 {get, set} 객체를 computed()의 인수로 전달하면 쓰기 가능 상태로 선언할 수 있다. 이런 메커니즘은 옵션 API의 computed 프로퍼티와 나란히 일관성을 유지시키기 위해 존재한다. 읽고 쓰야할 데이터는 ref()나 reactive()로 처리 해야 한다.
