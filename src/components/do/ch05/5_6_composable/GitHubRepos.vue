@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useGitHubRepos } from '@/composables/ch05/useGitHubRepos'
-const { data: repos } = useGitHubRepos('moonsoo364')
+const { data: repos } = useGitHubRepos('mayashavin')
 </script>
 <template>
   <div>

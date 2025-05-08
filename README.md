@@ -1361,7 +1361,7 @@ DiningComponent component created
 
 믹스인은 컴포넌트 사이에 공통 로직을 공유하고 코드 조직화를 하는데 큰 역할을 한다. 그러나 믹스인을 남발하면 다른 개발자가 코드를 읽거나 디버깅할 때 큰 혼란을 야기하기 쉽다. 믹스인을 선택하기 전에 Composition API등의 대안이 더 적합한 상황이 아닌 지 검토해본다.
 
-# 250501 ~ 250502, 3.10 scoped ~  
+# 250501 ~ 250502, 3.10 scoped ~
 
 ## 3.11 컴포넌트 스타일과 적용 범위
 
@@ -1482,7 +1482,7 @@ HeadingComponent에 템플릿이 없거나 애플리케이션 런타임에 포�
 
 ### 3.11.3 스타일 태그에서 v-vind()로 컴포넌트 데이터 접근하기
 
-컴포넌트 데이터에 접근해 값을 얻고 이를 CSS 프로퍼티에 대입해야할 때가 종종 있다. 가령 애플리케이션은 사용자가 선택한 결정에 따라 다크 모드를 전환하거나 테마 색상을 변경해야 한다. 이런 경우는 의사 클래스 v-bind()를 사용할 수 있다. 
+컴포넌트 데이터에 접근해 값을 얻고 이를 CSS 프로퍼티에 대입해야할 때가 종종 있다. 가령 애플리케이션은 사용자가 선택한 결정에 따라 다크 모드를 전환하거나 테마 색상을 변경해야 한다. 이런 경우는 의사 클래스 v-bind()를 사용할 수 있다.
 
 v-bind()는 하나의 인수를 입력받으며, 인수 형태는 컴포넌트의 데이터 프로퍼티 또는 자바 스크립트 표현식 문자열이다. 가령 [예제-35]는 titleColor 데이터 프로퍼티 값을 HeadingComponent의 h1 엘리먼트 색상으로 지정한다.
 
@@ -1560,21 +1560,22 @@ v-bind() 의사 클래스는 titleColor 데이터 프로퍼티 값을 인라인�
 <p data-v-f0f3fbad="" class="description" style="--f0f3fbad-titleColor: #178c0e;">A Vue.js project to learn Vue.js</p>
 ```
 
-브라우저 개발자 도구에서  Elements 탭을 열고 스타일을 살펴보자 .heading 선택자의 color 프로퍼티는 정적인 값이다. 그러나 titleColor의 인라인 해시 CSS와 동일한 값이 지정됐음을 알 수 있다.
+브라우저 개발자 도구에서 Elements 탭을 열고 스타일을 살펴보자 .heading 선택자의 color 프로퍼티는 정적인 값이다. 그러나 titleColor의 인라인 해시 CSS와 동일한 값이 지정됐음을 알 수 있다.
 
 ```css
 element.style {
-    --f0f3fbad-titleColor: #178c0e;
+  --f0f3fbad-titleColor: #178c0e;
 }
 .heading[data-v-f0f3fbad] {
-    color: var(--f0f3fbad-titleColor);
-    font-size: 2em;
+  color: var(--f0f3fbad-titleColor);
+  font-size: 2em;
 }
 ```
 
 v-bind()는 컴포넌트에서 데이터를 가져와 CSS 프로퍼티에 동적으로 바인딩할 수 있는 편리한 도구다. 그러나 이 방식은 단반향 바인딩에 지나지 않는다. template에 정의된 CSS 스타일을 엘리먼트에 바인딩하려면 이어서 다룰 CSS 모듈을 사용해야 한다.
 
 ## 3.12 CSS 모듈과 컴포넌트 스타일
+
 포넌트 단위로 CSS 스타일의 범위를 지정하는 또 하나의 수단은 CSS 모듈이다. CSS 모듈은 평범하게 작성한 CSS 스타일을 template 및 script 섹션에서 자바스크립트 객체 형태로 소비할 수 있도록 해준다.
 
 ```jsx
@@ -1673,7 +1674,7 @@ export default defineComponent({
 
 ## 4. 컴포넌트 상호작용
 
-3장에서는 라이프사이클 훅, computed 프로퍼티, 와처 메서드 등의 기능으로 컴포넌트를 구성하는 방법을 심도 있게 살펴봤다. 
+3장에서는 라이프사이클 훅, computed 프로퍼티, 와처 메서드 등의 기능으로 컴포넌트를 구성하는 방법을 심도 있게 살펴봤다.
 
 이런 기초 지식을 발판 삼아 이번 장에서는 커스텀 이벤트와 제공/주입패턴으로 컴포넌트 상호작용을 구축하는 방법을 알아볼 것이다. 또한 텔레포트 API라는 편리한 기능을 선보인다. 텔레포트 API는 컴포넌트 내부에서 엘리먼트를 유지한 채 DOM 트리의 원하는 위치로 이동시킬 수 있는 도구이다.
 
@@ -1698,15 +1699,15 @@ Vue 컴포넌트의 props 필드는 객체 또는 배열 형태로 정의한다.
       <span class="heading">!!This is span a element in parent</span>
     </section>
   </template>
-  
+
   <script lang="ts">
   import { defineComponent } from 'vue'
-  
-  
+
+
   export default defineComponent({
     name: 'ChildComponent',
     props:{
-      name: String  
+      name: String
     },
     data(): { title: string; description: string } {
       return {
@@ -1716,11 +1717,11 @@ Vue 컴포넌트의 props 필드는 객체 또는 배열 형태로 정의한다.
     },
   })
   </script>
-  
+
   <style scoped>
-  
+
   </style>
-  
+
 ```
 
 ```jsx
@@ -1752,7 +1753,7 @@ export default defineComponent({
 
 ```
 
-name prop은 String 타입이다. 부모 컴포넌트는 name prop을 통해 자식 컴포넌트에 데이터를 전달 할 수 있다. 정적 문자열 ‘Red Sweater’를ChildCompnent에 name값으로 전달한다. 동적데이터 변수를 넘기려면 v-bind 속성 또는 : 문자를 사용하면 된다. 다음은 children 배열의 첫번쨰 값을 name으로 전달한다. 
+name prop은 String 타입이다. 부모 컴포넌트는 name prop을 통해 자식 컴포넌트에 데이터를 전달 할 수 있다. 정적 문자열 ‘Red Sweater’를ChildCompnent에 name값으로 전달한다. 동적데이터 변수를 넘기려면 v-bind 속성 또는 : 문자를 사용하면 된다. 다음은 children 배열의 첫번쨰 값을 name으로 전달한다.
 
 ```jsx
 <template>
@@ -1869,7 +1870,7 @@ export default defineComponent({
 <style scoped>
 
 </style>
- 
+
 ```
 
 ```jsx
@@ -1904,7 +1905,7 @@ export default defineComponent({
 
 자식 컴포넌트는 자신이 정의한 props만 할당 받는다. 따라서 부모 컴포넌트에 product.description이라는 필드가 있다 해도 자식 컴포넌트에서 이 필드에 접근할 수 없다.
 
-- 컴포넌트의 props는 문자열 배열로 선언하는 방법도 있다. props: [”name”, “price”] 와 같이 선언하면 배열 원소가 각 prop의 이름이 된다. 이러한 방식은 컴포넌트의 프로토타입을 빨리 만들어야할 때 효과적이다. 그러나 코드 가독성을 높이고 버그를 예방하는데는 방해가 된다, 되도록이면 항상 props  객체 형식을 고수하고 모든 prop에 타입을 지정할 것을 권장한다.
+- 컴포넌트의 props는 문자열 배열로 선언하는 방법도 있다. props: [”name”, “price”] 와 같이 선언하면 배열 원소가 각 prop의 이름이 된다. 이러한 방식은 컴포넌트의 프로토타입을 빨리 만들어야할 때 효과적이다. 그러나 코드 가독성을 높이고 버그를 예방하는데는 방해가 된다, 되도록이면 항상 props 객체 형식을 고수하고 모든 prop에 타입을 지정할 것을 권장한다.
 
 props를 선언하고 타입을 지정하는 방법을 배웠다, 그렇다면 자식 컴포넌트 props로 전달된 데이터의 유효성은 어떻게 검증해야 할까? 또한 값이 전달되지 않았을 때 사용할 폴백값은 어떻게 설정할 수 있을까? 이어서 알아보자
 
@@ -1934,11 +1935,11 @@ name prop을 String 타입으로 선언했다. 런타임 도중 컴포넌트가 
       <span class="heading">!!This is span a element in parent</span>
     </section>
   </template>
-  
+
   <script lang="ts">
   import { defineComponent } from 'vue'
-  
-  
+
+
   export default defineComponent({
     name: 'ChildComponent',
     props:{
@@ -1949,8 +1950,8 @@ name prop을 String 타입으로 선언했다. 런타임 도중 컴포넌트가 
     },
   })
   </script>
-  
-  
+
+
 ```
 
 부모 컴포넌트가 값을 전달하지 않으면 자식 컴포넌트는 name prop의 기본값인 Child Component로 대체된다.
@@ -1963,11 +1964,11 @@ name prop을 String 타입으로 선언했다. 런타임 도중 컴포넌트가 
       <span class="heading">!!This is span a element in parent</span>
     </section>
   </template>
-  
+
   <script lang="ts">
   import { defineComponent } from 'vue'
-  
-  
+
+
   export default defineComponent({
     name: 'ChildComponent',
     props:{
@@ -1982,22 +1983,23 @@ name prop을 String 타입으로 선언했다. 런타임 도중 컴포넌트가 
     },
   })
   </script>
-  
-  
+
+
 ```
 
 name prop에서 값을 전달하지 않거나 전달한 값이 Child component와 일치할 경우 Vue는 개발 모드에서 다음과 같은 경고를 한다.
 
 ```jsx
-MyComponent.vue?t=1746151682858:56 [Vue warn]: Invalid prop: custom validator check failed for prop "name". 
-  at <ChildComponent name="Child component" > 
-  at <ProductList > 
+MyComponent.vue?t=1746151682858:56 [Vue warn]: Invalid prop: custom validator check failed for prop "name".
+  at <ChildComponent name="Child component" >
+  at <ProductList >
   at <App>
 ```
 
 - default 필드에서 Function 타입이 지정된 경우, prop의 초기값을 반환하는 함수를 전달해야 한다. 이 함수는 데이터를 부모 컴포넌트로 되돌려 보내지 않으며, 이 함수에서 변경되는 데이터를 부모 수준에서 감지할 수 없다.
 
 내장 타입은 Vue가 기본적으로 유효성을 검사한다. 추가로, 자바 스크립트 Class 또는 함수 생성자에 타입스크립트를 추가하면 커스텀 prop을 만들고 유효성을 검사할 수 있다.
+
 ### 4.1.3 커스텀 prop 타입 검사
 
 Array, String, Object 등의 기본 타입만 있어도 대부분의 사용 요건에 대응할 수 있다. 그러나 애플리케이션이 성장하면 컴포넌트도 복잡하지기 마련이며 기본 타입으로만으로 타입 안정성을 지키기 힘든 상황이 벌어지기도 한다. PizzaCompnent에 담긴 다음과ㅏ 같은 템프릿 코드를 살펴보자
@@ -2032,16 +2034,17 @@ export default defineComponent({
 
 간단 명료한 구조다. 그러나 pizza를 Object 타입으로 선언하는 배경에는 부모가 올바른 오브젝트를 전달한다는 가정이 깔려 있다. 다시말해, pizza를 렌더링하기 위해 필요한 title, image, description, quantity, price 등의 필드가 오브젝트 안에 존재해야 한다.
 
-이러한 가정은 문제의 소지가 있다. pizza는  Object 타입 데이터를 조건 없이 수용하므로, PizzaComponent를 사용하는 모든 컴포넌트는 pizza에 필요한 필드가 누락된 오브젝트 데이터를 prop으로 전달할 수 있다.
+이러한 가정은 문제의 소지가 있다. pizza는 Object 타입 데이터를 조건 없이 수용하므로, PizzaComponent를 사용하는 모든 컴포넌트는 pizza에 필요한 필드가 누락된 오브젝트 데이터를 prop으로 전달할 수 있다.
 
 ### 4.1.4 defineProps()와 withDefaults()를 이용한 prop선언
+
 타입스크립트를 활용하면 컴포넌트별 타입을 선언할 수 있다. 이를 defineProps()로 전달하면 컴파일 과정에서 유효성을 검사한다.
 
 ```jsx
 <template>
     <header>Name : {{ name }}</header>
   </template>
-  
+
   <script lang="ts">
   import { defineProps } from 'vue'
   type ChildProps = {
@@ -2049,7 +2052,7 @@ export default defineComponent({
   }
  const props = defineProps<ChildProps>()
   </script>
-  
+
 ```
 
 이 상태에서 name prop의 기본값을 선언하려면 defineProps()를 with-Defaults()로 감싸면 된다.
@@ -2058,7 +2061,7 @@ export default defineComponent({
 <template>
     <header>Name : {{ name }}</header>
   </template>
-  
+
   <script lang="ts">
   import { defineProps, withDefaults } from 'vue'
   type ChildProps = {
@@ -2066,16 +2069,16 @@ export default defineComponent({
   }
  const props = withDefaults(defineProps<ChildProps>(),{
   name: 'Hello from the child component'
- }) 
+ })
   </script>
-  
+
 ```
 
 - 타입 스크립트의 유효성와 defineProps() : withDefaults()를 쓰면 props 타입의 런타임 검사와 컴파일타임 검사가 동시에 작동하지 않는다. 가급적 defineProps() 사용하면서 코드 가독성을 높이고 Vue와 타입 스크립트의 유효성 검사를 병행하기 바란다.
 
 ## 4.2 커스텀 이벤트와 컴포넌트 간 통신
 
-커스텀 이벤트는  script setup 코드에서 defineEmits()로 정의한다. defineEmits() 함수의 입력 파라미터 타입은 앞서 배웠던 emits와 동일하다.
+커스텀 이벤트는 script setup 코드에서 defineEmits()로 정의한다. defineEmits() 함수의 입력 파라미터 타입은 앞서 배웠던 emits와 동일하다.
 
 ```jsx
 const emits = defineEmits(['component-event'])
@@ -2084,10 +2087,10 @@ const emits = defineEmits(['component-event'])
 `defineEmits()` 가 반환하는 함수 인스턴스를 통해 다음과 같이 특정 이벤르를 호출할 수 있다.
 
 ```jsx
-emits('component-event',[...args])
+emits('component-event', [...args])
 ```
 
-아래 예시는  script setup 코드 블록에서 this 인스턴스를 사용하지 않으므로 defineComponent를 적용할 필요가 없다.
+아래 예시는 script setup 코드 블록에서 this 인스턴스를 사용하지 않으므로 defineComponent를 적용할 필요가 없다.
 
 단일 문자열 대신 특정 타입으로 task-completed-toggle 이벤트를 선언하면 타입 유효성을 효과적으로 검증할 수 있다.
 
@@ -2157,7 +2160,7 @@ import { defineComponent } from '@vue/composition-api'
 
 export default defineComponent({
     setup() {
-        
+
     },
     provide() {
         return {
@@ -2223,18 +2226,17 @@ selectedIds ➞ currentSelectedIds:Array[5]
 provide와 inject를 적절히 활용하면 props를 드릴링하지 않고도 컴포넌트 사이에서 효율적으로 데이터를 전달할 수 있다. 다음으로 엘리먼트의 특정 콘텐츠 섹셩을 DOM의 특정 위치로 렌더링 시킬 수 있는 Teleport 컴포넌트를 살펴보자
 
 ## 4.5 텔레포트 API
+
 컴포넌트를 구현하다 보면 가끔 스타일 제약 조건에 맞춰 엘리먼트를 모다 두어야 하는 경우가 있다. 이러한 엘리먼트는 컴포넌트 단위가 아닌 전체 화면 효과를 기준으로 DOM의 특정 위치에 렌더링해야 한다. 이렇듯 일부 엘리먼트를 원하는 위치로 ‘순간이동’ 시키는 기능은 대체로 구현하기 복잡하다. 개발 난도가 높고 시간도 오래 걸릴 뿐만 아니라 성능에도 안 좋은 영향을 끼친다. 이러한 순간이동 난제에 대한 해답으로 Vue는 Teleport 컴포넌트를 제시한다.
 
 Teleport 컴포넌트는 to라는 속성으로 이동 대상 컴포넌트를 가리킨다. 이 속성으로 이동 대상 컴포넌트를 가리킨다. 이속성은 쿼리 선택자 또는 실제 HTML 엘리먼트를 담고 있다. Sky and clouds라는 영역을 지닌 House 컴포넌트다. Vue엔진은 이 부분을 #sky로 지정된 DOM 엘리먼트로 이동시킨다.
 
 ```jsx
 <template>
-    <div>
-        This is a house
-    </div>
-    <Teleport to="#sky">
-        <div>Sky and clouds</div>
-    </Teleport>
+  <div>This is a house</div>
+  <Teleport to="#sky">
+    <div>Sky and clouds</div>
+  </Teleport>
 </template>
 ```
 
@@ -2261,7 +2263,7 @@ export default {
 
 App.vue는 과 같이 House 컴포넌트를 사용한다. 여기에 텔레포트 목적지인 section 엘리먼트를 추가하고 id를 sky로 지정한다.
 
-브라우저 개발자 도구에서 요소 또는 Elements 탭을 열고 DOM 트리를 확인하면 Sky and clouds 영역이 `<section id=”sky’>` 내부로 이동했음 을 알 수 있다. 
+브라우저 개발자 도구에서 요소 또는 Elements 탭을 열고 DOM 트리를 확인하면 Sky and clouds 영역이 `<section id=”sky’>` 내부로 이동했음 을 알 수 있다.
 
 ```jsx
 <section id="sky"><div>Sky and clouds</div></section>
@@ -2274,18 +2276,16 @@ App.vue는 과 같이 House 컴포넌트를 사용한다. 여기에 텔레포트
 `<Teleport>` 컴포넌트의 disabled 속성에 불리언 값을 지정하면 컴포넌트를 이동시킬 지 말지 동적으로 제어할 수 있다. 이러한 컴포넌트는 DOM 트리를 보존하면서 필요한 순간에 우너하는 컨텐츠만 대상 위치로 이동시키는 편리한 도구다. 다음 절은 Teleport의 가장 일반적인 사용처인 모달 기능을 구현할 것이다.
 
 - [Caution] 두 섹션이 하나의 부모 엘리먼트 하위에 있을 때
-텔레포트의 목적지 컴포넌트는 Teleport가 마운트되기 전에 DOM 안에 존재해야 한다. 두 section이 모두 하나의 main 엘리먼트 안에 있다면 Teleport 컴포넌트가 제대로 작동하지 않는다.
+  텔레포트의 목적지 컴포넌트는 Teleport가 마운트되기 전에 DOM 안에 존재해야 한다. 두 section이 모두 하나의 main 엘리먼트 안에 있다면 Teleport 컴포넌트가 제대로 작동하지 않는다.
 
 ### 4.5.1 Teleport와 <dialog> 엘리먼트를 이용한 모달 구현
 
-모달은 화면에서 가장 전면에 나타난느 대화 상자를 일컫는다. 또한 모달은 사용자와 메인페이지의 상호작용을 차단한다. 사용자는 모달 상호작용을 먼저 처리하고 창을 닫아야 메인페이지로 돌아갈수 있다. 모달은 사용자의 주의를 온전히 집중시켜야 할 중요한 알림을 단 한 번만 표시하려고 할 때 매우 편리하다. 
+모달은 화면에서 가장 전면에 나타난느 대화 상자를 일컫는다. 또한 모달은 사용자와 메인페이지의 상호작용을 차단한다. 사용자는 모달 상호작용을 먼저 처리하고 창을 닫아야 메인페이지로 돌아갈수 있다. 모달은 사용자의 주의를 온전히 집중시켜야 할 중요한 알림을 단 한 번만 표시하려고 할 때 매우 편리하다.
 
 기본적인 모달을 설계해보자, 일반적인 대화 상자와 비슷하게 모달은 다음과 같은 요소를 포함한다.
 
 - 전체화면을 덮는 배경(backdrop)은 현재 페이지와 사용자의 상호작용을 차단하는 역할을 한다.
 - 제목과 닫기 버튼이 있는 header 콘텐츠가 담긴 main, 통상적인 닫기 버튼이 있는 footer 섹션은 slot을 이용해 커스터 마이징 한다.
-
- 
 
 ```jsx
  <template>
@@ -2383,9 +2383,9 @@ export default defineComponent({
 <template>
   <h2>With Modal components</h2>
   <button @click="openModal = true">Open Modal</button>
-  <NoticeModal 
-    :open="openModal" 
-    title="Hello World" 
+  <NoticeModal
+    :open="openModal"
+    title="Hello World"
     @closeDialog="toggleModal"/>
 </template>
 
@@ -2417,23 +2417,26 @@ export default defineComponent({
 index.html 파일의 body div 엘리먼트를 추가하고 `id="modal"` 을 추가한다.
 
 ```jsx
- <template>
+<template>
   <MyComponent />
   <div id="modal"></div>
 </template>
 ```
 
-id가 modal인 div는 텔레포트 목적지 엘리먼트다. open prop이 true로 바뀔 때마다 vue는 이 div에 modal 텔레포트 컴포넌트를 렌더링한다. 
+id가 modal인 div는 텔레포트 목적지 엘리먼트다. open prop이 true로 바뀔 때마다 vue는 이 div에 modal 텔레포트 컴포넌트를 렌더링한다.
 
 ```jsx
 <div id="modal">
-<dialog open="">
-<header>
-<h2>Hello World</h2>
-<button>X</button></header
-><main></main><footer>
-<button>Close</button></footer>
-</dialog>
+  <dialog open="">
+    <header>
+      <h2>Hello World</h2>
+      <button>X</button>
+    </header>
+    <main></main>
+    <footer>
+      <button>Close</button>
+    </footer>
+  </dialog>
 </div>
 ```
 
@@ -2443,7 +2446,7 @@ open prop이 false일 때는 div 내부가 비어 있다.
 <div id="modal"></div>
 ```
 
-모달 컴포넌트가 작동하기 시작했지만 모달의 시각적 효과는 아직 부족한면 있다. 모달이 나타날 때 메인 페이지 컨텐츠에는 어두운 오버레이가 깔려야 한다 이 문제는 CSS 스타일로 해결할 수 있다. 
+모달 컴포넌트가 작동하기 시작했지만 모달의 시각적 효과는 아직 부족한면 있다. 모달이 나타날 때 메인 페이지 컨텐츠에는 어두운 오버레이가 깔려야 한다 이 문제는 CSS 스타일로 해결할 수 있다.
 
 ```jsx
 <style scoped>
@@ -2453,9 +2456,9 @@ open prop이 false일 때는 div 내부가 비어 있다.
 </style>
 ```
 
-그러나 이렇게 스타일만 추가해서는 모달 배경이 바뀌지 않는다. 브라우저는 dialog.show-modal() 메서드로 모달을 열었을 때만  ::backdrop 선택자를 적용하기 때문이다. 브라우저의 이러한 작동은 open 속성값의 영향을 받지 않는다. 따라서 스타일이 작동하게 하려면 다음과 같이 수정해야 한다.
+그러나 이렇게 스타일만 추가해서는 모달 배경이 바뀌지 않는다. 브라우저는 dialog.show-modal() 메서드로 모달을 열었을 때만 ::backdrop 선택자를 적용하기 때문이다. 브라우저의 이러한 작동은 open 속성값의 영향을 받지 않는다. 따라서 스타일이 작동하게 하려면 다음과 같이 수정해야 한다.
 
-`<dialog>`엘리먼트를 직접 참조할 수 있도록 ref 속성에 “dialog”를 할당한다. 
+`<dialog>`엘리먼트를 직접 참조할 수 있도록 ref 속성에 “dialog”를 할당한다.
 
 ```jsx
         <dialog ref="dialog">
@@ -2468,7 +2471,7 @@ watch에 open을 추가하고 값이 바뀔 때마다 $refs.dialog.showModal() �
         open(newValue){
             const element = this.$refs.dialog as HTMLDialogElement;
 
-            
+
             if (element && element.showModal) {
                 if(newValue){
                     console.log(newValue);
@@ -2509,30 +2512,30 @@ dialog 엘리먼트의 내장 메서드인 showModal()로 모달을 열면 브�
 
 지금까지 Telport로 재사용 Modal 컴포넌트를 구현하고 `dialog` 엘리먼트의 내장 기능과 다양한 활용법을 살펴봤다. 또한 ::backdrop CSS 선택자로 모달 배경 스타일을 지정하는 방법도 배웠다.
 
-지금까지 모달을 표시할 대상 div는 body의 자식 엘리먼트인 동시에 Vue앱의 엔트리 엘리먼트인 `<div id=”app>` 외부에 있었다. 그렇다면 모달의 대상 div를 app.vue 엔트리 컴포넌트 내부로 옮기면 무슨 일이 벌어질까? 
+지금까지 모달을 표시할 대상 div는 body의 자식 엘리먼트인 동시에 Vue앱의 엔트리 엘리먼트인 `<div id=”app>` 외부에 있었다. 그렇다면 모달의 대상 div를 app.vue 엔트리 컴포넌트 내부로 옮기면 무슨 일이 벌어질까?
 
 ### 4.5.2 텔레포트 렌더링 제한
 
 App.vue의 자식 컴포넌트에서 Teleport로 모달을 렌더링하려 시도하면 문제가 발생한다.
 
 ```jsx
-main.ts:27 [Vue warn]: Failed to locate Teleport target with selector "#modal". Note the target element must exist before the component is mounted - i.e. the target cannot be rendered by the component itself, and ideally should be outside of the entire Vue component tree. 
-  at <NoticeModal open=false title="Hello World" onCloseDialog=fn<bound toggleModal> > 
-  at <TeleportComponent > 
+main.ts:27 [Vue warn]: Failed to locate Teleport target with selector "#modal". Note the target element must exist before the component is mounted - i.e. the target cannot be rendered by the component itself, and ideally should be outside of the entire Vue component tree.
+  at <NoticeModal open=false title="Hello World" onCloseDialog=fn<bound toggleModal> >
+  at <TeleportComponent >
   at <App>
 (anonymous)	@	main.ts:27
 
 ```
 
-vue의 렌더링 메커니즘에 따르면 부모 컴포넌트는 자식 컴포넌트를 발견하면 자식의 렌더링이 끝날 때까지 대기하다가 완료되고 나서야 자신을 계속 렌더링한다. 또한 자식 엘리먼트의 부모의 template 섹션에 등장하는 순서대로 렌더링된다. 방금 예시에서 Vue는 
-`WithModalComponent` 를 렌더링하여 `<dialog>` 를 부모 컴포넌트에 있는 목적지로  텔레포트하려 시도한다. 그런나 부모 컴포넌트는 WithModalComponent가 렌더링 할 때 까지 기다리고 있으므로 `<div id="modal">` 엘리먼트는 아직 DOM에 존재하지 않는다. 결과적으로 vue의 목적지인 `<div id="modal>"` 로 `<dialog>` 를 올바르게 이동시킬 수 없으며 에러가 발생한다.
+vue의 렌더링 메커니즘에 따르면 부모 컴포넌트는 자식 컴포넌트를 발견하면 자식의 렌더링이 끝날 때까지 대기하다가 완료되고 나서야 자신을 계속 렌더링한다. 또한 자식 엘리먼트의 부모의 template 섹션에 등장하는 순서대로 렌더링된다. 방금 예시에서 Vue는
+`WithModalComponent` 를 렌더링하여 `<dialog>` 를 부모 컴포넌트에 있는 목적지로 텔레포트하려 시도한다. 그런나 부모 컴포넌트는 WithModalComponent가 렌더링 할 때 까지 기다리고 있으므로 `<div id="modal">` 엘리먼트는 아직 DOM에 존재하지 않는다. 결과적으로 vue의 목적지인 `<div id="modal>"` 로 `<dialog>` 를 올바르게 이동시킬 수 없으며 에러가 발생한다.
 
-다음과 같이 `<div id =”modal>` 을  WithModalComponent보다 앞에 두면 우회적으로 해결할 수 있다.
+다음과 같이 `<div id =”modal>` 을 WithModalComponent보다 앞에 두면 우회적으로 해결할 수 있다.
 
 ```jsx
 <template>
   <div id="modal"></div>
-  <WithModalComponent/>
+  <WithModalComponent />
 </template>
 ```
 
@@ -2544,13 +2547,14 @@ vue의 렌더링 메커니즘에 따르면 부모 컴포넌트는 자식 컴포�
 
 ## 정리
 
-이번장에서  Vue에 내장된 props, emits, provide/inject 등의 기능과 컴포넌트 통신의 다양한 개념을 살펴보았다, Vue의 데이터 흐름 메커니즘을 거스르지 않으면서 컴포넌트 간 데이터와 이벤트를 전달하는 방법도 배웠다. 또한 부모 컴포넌트의 `<template>` 구조를  유지하면서 텔레포트 API로 DOM 트리 외부에 엘리먼트를 렌더링할 수 있었다. `<Teleport>` 는 팝업, 대화상자, 모달 처럼 메인 페이지 엘리먼트와 나란히 표시할 요소를 컴포넌트로 구성할 때 필수적이다.
+이번장에서 Vue에 내장된 props, emits, provide/inject 등의 기능과 컴포넌트 통신의 다양한 개념을 살펴보았다, Vue의 데이터 흐름 메커니즘을 거스르지 않으면서 컴포넌트 간 데이터와 이벤트를 전달하는 방법도 배웠다. 또한 부모 컴포넌트의 `<template>` 구조를 유지하면서 텔레포트 API로 DOM 트리 외부에 엘리먼트를 렌더링할 수 있었다. `<Teleport>` 는 팝업, 대화상자, 모달 처럼 메인 페이지 엘리먼트와 나란히 표시할 요소를 컴포넌트로 구성할 때 필수적이다.
 
 다음 장에서는 컴포지션 API를 자세히 알아보고 이를 이용해 Vue 컴포넌트를 구성하는 방법을 살펴볼 것이다.
 
 # 250507 5.1 컴포지션 API를 통한 컴포넌트 설정 ~
 
 ## 5.1 컴포지션 API를 통한 컴포넌트 설정
+
 Vue 컴포넌트를 구성할 때는 통상적으로 옵션 API를 사용한다. 그러나 데이터와 메서드가 중복될 염려 없이
 컴포넌트 로직 일부를 재사용한다면 옵션 API만으로는 역부족이다. 컴포지션 API는 믹스인을 접목할 수 있어
 이러한 요건에 부합하며 가독성과 체계성도 더 좋다. Vue3부터 도입된 컴포지션 API는 setup()훅 또는 `<script setup>` 태그로 반응형 컴포넌트를 구성한다. setup() 혹은 컴포넌트 옵션 객체의 일부이며 컴포넌트 인스턴스 최초 생성 이전(beforeCreate() 훅)에 한 번 실행한다.
@@ -2608,8 +2612,7 @@ const message = ref('Hello, Vue 3!')
 input 필드값을 고치면 브라우저에 표시되는 message도 똑같이 바뀐다. 개발자도구 vue탭에서 보면 ref 객체의 message가 나열되고 Ref라는 표시가 붙는다.
 
 ```jsx
-message : 안녕하세요(Ref)
-
+message: 안녕하세요(Ref)
 ```
 
 예제에서는 title이라는 정적 데이터를 컴포넌트에 추가했다. Vue 데브툴을 보면 title프로퍼티가 추가됐지만 Ref 표시는 없다.
@@ -2636,7 +2639,7 @@ export default {
 
 ```
 
-string, number, boolean, null, undefined 등의 모든 우너시 타입은 ref()함수로 반응형 객체를 생성할 수 있다. 그러나 배열이나 객체를 반환할 때는 ref()가 특히 강한 반응형 객체를 생성한다. 그러나 배열이나 객체를 반환할 때는 ref가 특히 강ㅅ한 반응형 객체를 생성한다. ref객체에 소속된 프로퍼티가 반응형으로 설정된다는 뜻이다. 
+string, number, boolean, null, undefined 등의 모든 우너시 타입은 ref()함수로 반응형 객체를 생성할 수 있다. 그러나 배열이나 객체를 반환할 때는 ref()가 특히 강한 반응형 객체를 생성한다. 그러나 배열이나 객체를 반환할 때는 ref가 특히 강ㅅ한 반응형 객체를 생성한다. ref객체에 소속된 프로퍼티가 반응형으로 설정된다는 뜻이다.
 
 ```jsx
 <script lang="ts" setup>
@@ -2662,7 +2665,7 @@ const user = shallowRef<User>({
 const error = shallowRef<Error | undefined>();
 
 const fetchData = async () =>{
-    
+
     try{
         const response = await fetch("https://api.github.com/users/mayashavin");
         //3
@@ -2673,7 +2676,7 @@ const fetchData = async () =>{
         //4
         error.value = e as Error;
     }
-    
+
 }
 
 fetchData();
@@ -2765,29 +2768,29 @@ console.log(user);
 
 ref()나 reactive() 안에서 둘을 다시 호출하는 것도 가능하지만 매우 복잡해질 뿐만 아니라 반응성 언래핑 메커니즘까지 고려해야 하므로 권장하지 않는다. 반응형 객체를 이용해 또다른 반응형 객체를 생성하려 할 때는 computed() 를 사용하는 것이 좋다.
 
-| 훅 | 사용예 |
-| --- | --- |
-| ref() | 원시 데이터 타입을 다루는 일반적인 상황 또는 자신의 프로퍼티를 모두 재할당할 수 있는 객체 타입이 필요할 때 |
-| shallowRef() | 프로퍼티를 관찰할 필요가 없고 재할당이 예정된 자리표시자 객체가 필요할 때 |
-| reactive() | 객체 타입 데이터의 프로퍼티와 중첩 프로퍼티를 모두 관찰해야 할 때 |
-| shallowReactive() | 객체 타입 데이터의 프로퍼티를 관찰하지만 중첩 프로퍼티는 관찰할 필요가 없을 때 |
+| 훅                | 사용예                                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| ref()             | 원시 데이터 타입을 다루는 일반적인 상황 또는 자신의 프로퍼티를 모두 재할당할 수 있는 객체 타입이 필요할 때 |
+| shallowRef()      | 프로퍼티를 관찰할 필요가 없고 재할당이 예정된 자리표시자 객체가 필요할 때                                  |
+| reactive()        | 객체 타입 데이터의 프로퍼티와 중첩 프로퍼티를 모두 관찰해야 할 때                                          |
+| shallowReactive() | 객체 타입 데이터의 프로퍼티를 관찰하지만 중첩 프로퍼티는 관찰할 필요가 없을 때                             |
 
 ## 5.2 라이프사이클 훅
 
 컴포지션 API의 라이프 사이클 훅은 on이라는 접두어가 붙는다는 점을 제외하면 옵션 API의 훅과 거의 비슷하다. 가령 mounted는 컴포지션 API에서 onMounted에 해당한다. 아래는 옵션API와 컴포지션 API의 라이프 사이클 훅을 비교 정리한 것이다.
 
-| option | composition | 설명 |
-| --- | --- | --- |
-| beforeMount() | onBeforeMount() | 컴포넌트의 최초 렌더링 이전에 호출한다. |
-| mounted() | onMounted() | Vue가 컴포넌트를 렌더링하고 DOM에 마운팅한 이후에 호출한다. |
-| beforeUpdate() | onBeforeUpdate() | 컴포넌트의 업데이트 프로세스가 시작한 이후에 호출한다. |
-| updated() | onUpdated() | 업데이트된 컴포넌트를 DOM에 렌더링한 이후에 호출한다. |
-| beforeUnmount()  | onBeforeUnmount() | 컴포넌트를 언마운트하기전에 호출한다. |
-| unmounted() | onUnmounted() | 컴포넌트 인스턴스를 제거하고 파괴한 이후에 호출한다. |
+| option          | composition       | 설명                                                        |
+| --------------- | ----------------- | ----------------------------------------------------------- |
+| beforeMount()   | onBeforeMount()   | 컴포넌트의 최초 렌더링 이전에 호출한다.                     |
+| mounted()       | onMounted()       | Vue가 컴포넌트를 렌더링하고 DOM에 마운팅한 이후에 호출한다. |
+| beforeUpdate()  | onBeforeUpdate()  | 컴포넌트의 업데이트 프로세스가 시작한 이후에 호출한다.      |
+| updated()       | onUpdated()       | 업데이트된 컴포넌트를 DOM에 렌더링한 이후에 호출한다.       |
+| beforeUnmount() | onBeforeUnmount() | 컴포넌트를 언마운트하기전에 호출한다.                       |
+| unmounted()     | onUnmounted()     | 컴포넌트 인스턴스를 제거하고 파괴한 이후에 호출한다.        |
 
 beforeCreated와 created훅은 컴포지션 API에 없다 대신 setup으로 동일한 효과를 내며 컴포넌트 로직을 더욱 체계적으로 정의할 수 있다.
 
-컴포지션 API는 라이프 사이클 혹은 함수를 인수로 받는다. Vue는 이 함수를 콜백으로 등록 했다가 알맞은 시점에 실행한다. 
+컴포지션 API는 라이프 사이클 혹은 함수를 인수로 받는다. Vue는 이 함수를 콜백으로 등록 했다가 알맞은 시점에 실행한다.
 
 ```sql
 <script lang="ts" setup>
@@ -2800,7 +2803,7 @@ beforeCreated와 created훅은 컴포지션 API에 없다 대신 setup으로 동
 </script>
 ```
 
-Vue는 setup()을 컴포넌트 인스턴스 생성 전에  실행하므로 setup() 또는 그안에서 등록된 콜백에서 this 인스턴스에 접근할 수 없다. 따라서 위 예제에서 this는 undefined가 출력된다.
+Vue는 setup()을 컴포넌트 인스턴스 생성 전에 실행하므로 setup() 또는 그안에서 등록된 콜백에서 this 인스턴스에 접근할 수 없다. 따라서 위 예제에서 this는 undefined가 출력된다.
 
 그러나 ref() ref디렉티브를 이용하면 마치 옵션 API의 this.$el과 비슷하게 컴포넌트 dom 인스턴스에 접근할 수 있다.
 
@@ -2816,11 +2819,11 @@ Vue는 setup()을 컴포넌트 인스턴스 생성 전에  실행하므로 setup
     const message = ref('')
 
     onUpdated(() => {
-        console.log(' Dom instance after updated: ',inputRef.value); // null  
+        console.log(' Dom instance after updated: ',inputRef.value); // null
     })
 
     onMounted(() => {
-        console.log(' Dom instance: ',inputRef.value); // null        
+        console.log(' Dom instance: ',inputRef.value); // null
     })
 </script>
 ```
@@ -2828,24 +2831,25 @@ Vue는 setup()을 컴포넌트 인스턴스 생성 전에  실행하므로 setup
 컴포넌트가 마운팅되면 inputRef는 input 엘리먼트에 해당하는 DOm 인스턴스를 참조하게 된다. 사용자가 input필드를 변경할 때 마다 Vue는 onUpdated() 훅을 실행하고 그에 따라 DOM 인스턴스가 업데이트된다.
 
 컴포지션 API의 라이프사이클 훅은 옵션API보다 활용 범위가 넓다 라이프 사이클 훅을 조합해 한층 복잡한 로직을 만들고 자신만의 재사용 커스텀 훅을 만드는 것도 가능하다.
+
 # 250508 5.3 라이프사이클 훅 ~ 5.4 컴포지션 API의 와처
 
 ## 5.3 라이프사이클 훅
 
 컴포지션 API의 라이프 사이클 훅은 on이라는 접두어가 붙는다는 점을 제외하면 옵션 API의 훅과 거의 비슷하다. 가령 mounted는 컴포지션 API에서 onMounted에 해당한다. 아래는 옵션API와 컴포지션 API의 라이프 사이클 훅을 비교 정리한 것이다.
 
-| option | composition | 설명 |
-| --- | --- | --- |
-| beforeMount() | onBeforeMount() | 컴포넌트의 최초 렌더링 이전에 호출한다. |
-| mounted() | onMounted() | Vue가 컴포넌트를 렌더링하고 DOM에 마운팅한 이후에 호출한다. |
-| beforeUpdate() | onBeforeUpdate() | 컴포넌트의 업데이트 프로세스가 시작한 이후에 호출한다. |
-| updated() | onUpdated() | 업데이트된 컴포넌트를 DOM에 렌더링한 이후에 호출한다. |
-| beforeUnmount()  | onBeforeUnmount() | 컴포넌트를 언마운트하기전에 호출한다. |
-| unmounted() | onUnmounted() | 컴포넌트 인스턴스를 제거하고 파괴한 이후에 호출한다. |
+| option          | composition       | 설명                                                        |
+| --------------- | ----------------- | ----------------------------------------------------------- |
+| beforeMount()   | onBeforeMount()   | 컴포넌트의 최초 렌더링 이전에 호출한다.                     |
+| mounted()       | onMounted()       | Vue가 컴포넌트를 렌더링하고 DOM에 마운팅한 이후에 호출한다. |
+| beforeUpdate()  | onBeforeUpdate()  | 컴포넌트의 업데이트 프로세스가 시작한 이후에 호출한다.      |
+| updated()       | onUpdated()       | 업데이트된 컴포넌트를 DOM에 렌더링한 이후에 호출한다.       |
+| beforeUnmount() | onBeforeUnmount() | 컴포넌트를 언마운트하기전에 호출한다.                       |
+| unmounted()     | onUnmounted()     | 컴포넌트 인스턴스를 제거하고 파괴한 이후에 호출한다.        |
 
 beforeCreated와 created훅은 컴포지션 API에 없다 대신 setup으로 동일한 효과를 내며 컴포넌트 로직을 더욱 체계적으로 정의할 수 있다.
 
-컴포지션 API는 라이프 사이클 혹은 함수를 인수로 받는다. Vue는 이 함수를 콜백으로 등록 했다가 알맞은 시점에 실행한다. 
+컴포지션 API는 라이프 사이클 혹은 함수를 인수로 받는다. Vue는 이 함수를 콜백으로 등록 했다가 알맞은 시점에 실행한다.
 
 ```sql
 <script lang="ts" setup>
@@ -2858,7 +2862,7 @@ beforeCreated와 created훅은 컴포지션 API에 없다 대신 setup으로 동
 </script>
 ```
 
-Vue는 setup()을 컴포넌트 인스턴스 생성 전에  실행하므로 setup() 또는 그안에서 등록된 콜백에서 this 인스턴스에 접근할 수 없다. 따라서 위 예제에서 this는 undefined가 출력된다.
+Vue는 setup()을 컴포넌트 인스턴스 생성 전에 실행하므로 setup() 또는 그안에서 등록된 콜백에서 this 인스턴스에 접근할 수 없다. 따라서 위 예제에서 this는 undefined가 출력된다.
 
 그러나 ref() ref디렉티브를 이용하면 마치 옵션 API의 this.$el과 비슷하게 컴포넌트 dom 인스턴스에 접근할 수 있다.
 
@@ -2874,11 +2878,11 @@ Vue는 setup()을 컴포넌트 인스턴스 생성 전에  실행하므로 setup
     const message = ref('')
 
     onUpdated(() => {
-        console.log(' Dom instance after updated: ',inputRef.value); // null  
+        console.log(' Dom instance after updated: ',inputRef.value); // null
     })
 
     onMounted(() => {
-        console.log(' Dom instance: ',inputRef.value); // null        
+        console.log(' Dom instance: ',inputRef.value); // null
     })
 </script>
 ```
@@ -2893,11 +2897,8 @@ Vue는 setup()을 컴포넌트 인스턴스 생성 전에  실행하므로 setup
 
 ```jsx
 <script lang="ts" setup>
-watch(
-    sources: WatchSouce,
-    cb: (newValue: T, oldValue: T, cleanup:(func)=>void) => any,
-    options?:WatchOptions
-): WatchStopHandle
+  watch( sources: WatchSouce, cb: (newValue: T, oldValue: T, cleanup:(func)=>void) => any,
+  options?:WatchOptions ): WatchStopHandle
 </script>
 ```
 
@@ -2905,13 +2906,13 @@ watch(
 - cb는 sources가 변경될 때 Vue가 실행할 콜백 함수다. 이 함수의 핵심 인수는 newValue와 oldValue다. 다음 번 호출에 대비해 부수 효과를 정리하려면 cleanup 함수를 추가로 지정한다.
 - options는 Watch혹의 선택적 설정 옵션이며 필드 목록은 아래 표에 나열되어 있다.
 
-|  프로퍼티 | 설명 | 허용타입 | 기본값 | 필수 |
-| --- | --- | --- | --- | --- |
-| deep | 대상 데이터에 중첩 프로퍼티가 있을 때 이에 대한 관찰 여부를 지정한다. | boolean | false | N |
-| immediate | 컴포넌트 탑재 후 핸들러 즉시 실행 여부를 지정한다. | boolean | false | N |
-| flush | 핸들러 실행 시점을 지정한다. 기본적으로 Vue는 컴포넌트 업데이트 전에 핸들러를 실행한다. | pre, post, sync | pre | N |
-| onTrack | 반응형 데이터 추적 함수, 디버깅에 사용하며 개발 모드 전용이다. | 함수 | undefined | N |
-| onTrigger | 콜백 트리거 시 호출하는 함수, 디버깅에 사용하며 개발 모드 전용이다. | 함수 | undefined | N |
+| 프로퍼티  | 설명                                                                                    | 허용타입        | 기본값    | 필수 |
+| --------- | --------------------------------------------------------------------------------------- | --------------- | --------- | ---- |
+| deep      | 대상 데이터에 중첩 프로퍼티가 있을 때 이에 대한 관찰 여부를 지정한다.                   | boolean         | false     | N    |
+| immediate | 컴포넌트 탑재 후 핸들러 즉시 실행 여부를 지정한다.                                      | boolean         | false     | N    |
+| flush     | 핸들러 실행 시점을 지정한다. 기본적으로 Vue는 컴포넌트 업데이트 전에 핸들러를 실행한다. | pre, post, sync | pre       | N    |
+| onTrack   | 반응형 데이터 추적 함수, 디버깅에 사용하며 개발 모드 전용이다.                          | 함수            | undefined | N    |
+| onTrigger | 콜백 트리거 시 호출하는 함수, 디버깅에 사용하며 개발 모드 전용이다.                     | 함수            | undefined | N    |
 
 watch()가 반환하는 WatchStopHandle 함수를 실행하면 언제든지 해당 와처를 중지할 수 있다.
 
@@ -2952,7 +2953,7 @@ watch(
 
 ```
 
-기본적으로 Vue는 user가 변경될 때만 콜백 함수를 실행한다. 그러나 reactive()로 user를 생성하므로 Vue는 자동으로 deep을 활성화하고 모든 프로퍼티를 관찰한다. Vue가 user.name 등의 특정 프로퍼티만 관찰하게 하려면 해당 프로퍼티를 반환하는 getter함수를 만들고, 이를 watch의  sources 인수로 전달하면 된다.
+기본적으로 Vue는 user가 변경될 때만 콜백 함수를 실행한다. 그러나 reactive()로 user를 생성하므로 Vue는 자동으로 deep을 활성화하고 모든 프로퍼티를 관찰한다. Vue가 user.name 등의 특정 프로퍼티만 관찰하게 하려면 해당 프로퍼티를 반환하는 getter함수를 만들고, 이를 watch의 sources 인수로 전달하면 된다.
 
 아래 예제에서 user.name 혹은 user.age 가 변경되면 와처가 실행되고 콘솔 로그에 변경 내역이 출력된다.
 
@@ -2997,6 +2998,7 @@ watch(
 watch() 혹은 특정 반응형 데이터나 프로퍼티를 관찰하고 동적으로 처리할 수 있는 훌륭한 도구다. 그러나 기존 반응형 데이터를 바탕으로 새로운 반응형 데이터를 생성할 때는 computed()를 사용해야 한다.
 
 ## 5.5 computed()
+
 computed 프로퍼티와 마찬가지로 computed() 또한 특정 반응형 데이터를 바탕으로 새로운 반응형 데이터와 캐시 데이터 값을 생성한다. ref() 또는 reactive()와 달리 computed()는 읽기 전용 참조 객체를 반환한다. 다시 말해 값을 직접 재할당할 수 없다.
 
 옵션 API로 작성된 computed()를 훅 방식으로 고치면 다음과 같다.
@@ -3044,3 +3046,112 @@ const isPalindrome = computed<boolean>(
 이 예제는 타입 추론 에러를 방지하기 위해 reversedMessage와 isPalidrome의 타입을 명시적인 string과 boolean으로 선언한다.
 
 - computed()는 기본적으로 읽기 전용 반응형 데이터 참조를 반환한다. 그럼에도 {get, set} 객체를 computed()의 인수로 전달하면 쓰기 가능 상태로 선언할 수 있다. 이런 메커니즘은 옵션 API의 computed 프로퍼티와 나란히 일관성을 유지시키기 위해 존재한다. 읽고 쓰야할 데이터는 ref()나 reactive()로 처리 해야 한다.
+
+# 250509 5.6 컴포저블
+
+## 재사용 컴포저블
+
+컴포저블(composable)은 컴포지션 API 함수를 활용해 만드는 재사용 가능한 상태형 훅이다. 공통 로직을 보기 좋게 컴포저블로 나누어 구성하고 다양한 컴포넌트의 데이터 상태 변화를 관리할 수 있다. 이 과정에서 상태 관리 로직과 컴포넌트 로직이 분리된고 컴포넌트의 복잡도는 낮아지는 효과가 생긴다.
+
+컴포저블을 경험하기 위해 먼저 새로운 타입스크립트 파일을 생성하고 반응형 데이터 객체를 반환하는 함수를 만들어 익스포트한다.
+
+```jsx
+import { reactive } from 'vue'
+export const userMyComposable = () => {
+  const myComposableData = reactive({
+    title: 'This is my composable data',
+  })
+  return myComposableData
+}
+```
+
+스크립트가 export하는 useComposable 함수는 reactive()로 생성한 my-composableData라는 반응형 데이터 객체를 반환한다.
+
+- 컴포저블 파일은 프로젝트 어느 곳에 두어도 상관없지만 파일 구조를 정돈된 상태로 유지 하려면 src/composables 폴더에 배치하는 것이 좋다 또한 컴포저블 파일임을 명료하게 인식할 수 있도록 파일명에 관행적으로 use라는 접두어를 붙이도록 한다.
+
+이제 컴포넌트 템플릿과 로직에서 myComposableData에 접근하고 이를 로컬 반응형 데이터처럼 취급할 수 있다.
+
+```jsx
+<script lang="ts" setup>
+  import {useMyComposable} from '@/composables/useMyComposable'; const {myComposableData} =
+  useMyComposable();
+</script>
+```
+
+```jsx
+import {ref, type Ref, type UnwrapRef} from 'vue'
+type FetchResponse<T> = {
+    data: Ref<UnwrapRef<T> | null>;
+    error: Ref<UnwrapRef<Error | null>>;
+    loading: Ref<boolean>;
+}
+
+export function useFetch<T>(url: string): FetchResponse<T> {
+    const data = ref<UnwrapRef<T> | null>(null) as Ref<UnwrapRef<T> | null>;
+    const loading = ref<boolean>(false);
+    const error = ref<Error | null>(null);
+
+    const fetchDate = async () => {
+        try{
+            loading.value = true;
+            const response = await fetch(url);
+
+            if(response.ok){
+                throw new Error(`Failed to fetch date from ${url}`);
+            }
+            data.value = await response.json();
+        }
+        catch(err){
+            error.value = err as Error;
+        }finally{
+            loading.value = false;
+        }
+    }
+    fetchDate();
+    return {
+        data,
+        error,
+        loading,
+    }
+}
+```
+
+1. 데이터를 가져올 내부 로직을 선언
+2. 컴포넌트 생성 과정에서 fetchData() 실행 데이터 자동으로 업데이트한다.
+3. 선언된 반응형 변수를 반환한다.
+
+```jsx
+import { useFetch } from '@/composables/ch05/useFetch'
+
+type Repo = {}
+export const useGitHubRepos = (username: string) => {
+  return useFetch<Repo[]>(`https://api.github.com/users/${username}/repos`)
+}
+
+```
+
+```jsx
+<script lang="ts" setup>
+import { useGitHubRepos } from '@/composables/ch05/useGitHubRepos'
+const { data: repos } = useGitHubRepos('mayashavin')
+
+</script>
+<template>
+  <div>
+    <h2 class="heading">GitHub Repositories</h2>
+    <ul>
+      <li v-for="repo in repos" :key="repo.id">
+        <a :href="repo.html_url" target="_blank">{{ repo.name }}</a>
+      </li>
+    </ul>
+  </div>
+</template>
+
+```
+
+1. data를 가져와 repos로 이름을 변경한다.
+2. repos를 순회하며 각 repo의 정보를 표시한다.
+
+가져오기가 완료된 후 브라우저에서 리포지터리 목록을 볼 수 있다.
+
+컴포저블을 잘 쓰면 애플리케이션의 상태 관리 로직의 모듈화, 구조화 수준을 높일 수 있다. 자신만의 컴포저블 라이브러리를 구축하고 전혀 다른 Vue 프로젝트에서 재사용할 수도 있다. 테마 제어, 데이터 유입, 매장 결제 관리 등등 활용 범위는 무궁무진하다. 참고로 VueUse는 각종 컴포저블 자료의 보고다. 다양한 요건에 대응하며 꼼꼼히 테스트되었고, 지금 당장 프로젝트에 투입될 수 있는 수많은 Vue 컴포지션 유틸리티로 가득하다.
