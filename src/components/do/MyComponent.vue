@@ -1,18 +1,21 @@
-<template>
-    <div>
-        <input v-model="message" type="text" ref="inputRef" />
-    </div>
-</template>
 <script lang="ts" setup>
-    import { onMounted, onUpdated, ref } from 'vue'
-    const inputRef = ref(null)
-    const message = ref('')
+import { reactive } from 'vue'
 
-    onUpdated(() => {
-        console.log(' Dom instance after updated: ',inputRef.value); // null  
-    })
+const defaultIser ={
+    name: 'maya',
+    age: 20,
+}
 
-    onMounted(() => {
-        console.log(' Dom instance: ',inputRef.value); // null        
-    })
+const user = reactive({...defaultIser})
+console.log(defaultIser);// { name: 'maya', age: 20 }
+
+user.name='Rachel'
+user.age= 30
+
+console.log(user.name) // Rachel
+console.log(user.age) // 30
+defaultIser.name = 'Samuel'
+
+console.log(user);//{name: Rachel, age: 30}
+
 </script>
