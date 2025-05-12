@@ -7,6 +7,7 @@
     <div class="error">
       <p>Error: {{ error.message }}</p>
     </div>
+  </slot>
 </template>
 
 <script lang="ts" setup>
