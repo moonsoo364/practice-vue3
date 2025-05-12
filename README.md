@@ -3155,3 +3155,425 @@ const { data: repos } = useGitHubRepos('mayashavin')
 가져오기가 완료된 후 브라우저에서 리포지터리 목록을 볼 수 있다.
 
 컴포저블을 잘 쓰면 애플리케이션의 상태 관리 로직의 모듈화, 구조화 수준을 높일 수 있다. 자신만의 컴포저블 라이브러리를 구축하고 전혀 다른 Vue 프로젝트에서 재사용할 수도 있다. 테마 제어, 데이터 유입, 매장 결제 관리 등등 활용 범위는 무궁무진하다. 참고로 VueUse는 각종 컴포저블 자료의 보고다. 다양한 요건에 대응하며 꼼꼼히 테스트되었고, 지금 당장 프로젝트에 투입될 수 있는 수많은 Vue 컴포지션 유틸리티로 가득하다.
+
+# 250512 6.1 ~ 6.6
+
+## 6.1 Axios란
+
+Vue 개발자가 HTTP로 외부 리소스를 요청하는 방법은 다양하다. 내장 Fetch 메서드, 고전적인 XMLHttpRequest, Axios 같은 서드파티 라이브러리 등 여러 선택지가 있다. Http Request요청 데이터를 가져오기만 하려면 내장 fetch도 나쁘지 않다 그러나 장기적인 관점으로 복잡한 외부 리소스 API처리까지 고려한다면 다양한 추가 기능이 있는 Axios가 최선의 선택이다. Axios는 HTTP 요청을 처리하는 자바스크립트 오픈 소스 경량 라이브러리다. Fetch와 마찬가지로 프로미스 기반 HTTP 클라이언트이며, 서버와 브라우저 모두 사용할 수 있다.
+
+Axios는 HTTP 요처을 가로채거나 취소할 수 있으며 사이트 간 요청 위조 방지 기능이 클라이언트에 내장되어 있다.또한 응답 데이터를 JSON 형식으로 자동 변환한다.
+
+## 6.3 라이프 사이클 훅과 Axios
+
+데이터를 가져오는 부가 작업은 beforeCreate, created, beforeMounted 등의 라이프사이클 훅에서 처리할 수 있다. 그러나 외부 데이터를 가져와 컴포넌트나 옵션 API에서 쓰려면 beforeCreate는 제외해야 한다. 반응형 데이터를 초기화하기 전 이므로 beforeCreate에서 할당한 데이터를 Vue가 무시하기 때문이다. 따라서 created 또는 beforeMounted를 선택해야 한다. 그러나 beforeMounted는 서버 사이드 렌더링에 사용할 수 없으며 created 훅은 컴포지션 API에 대응하는 라이프 사이클 함수가 없다.
+
+가장 좋은 방법은 setup() 혹은 script setup에서 반응형 컴포지션 함수로 외부데이터를 가져오는 것이다.
+
+axios.get() 메서드로 Github 공개 프로필을 가져오는 비동기 GET 요청을 만들어 보자. axios.get()은 프로미스를 반환하며, 프로미스의 체인 메서드인 then()에서 응답 데이터를 처리한다. Axios는 HTTP 응답 본문 데이터를 JSON 형식으로 자동 분석한다.
+
+```jsx
+<script lang="ts" setup>
+import axios from 'axios'
+import {ref} from 'vue'
+
+const user = ref(null)
+
+axios.get('https://api.github.ocm/users/mayashavin')
+.then(response=>{
+    user.value = response.data;
+})
+</script>
+```
+
+위를 await/async 방식으로 고치면 다음과 같다.
+
+```
+async function getUser(){
+    const response = await axios.get('https://api.github.ocm/users/mayashavin');
+    user.value = response.data;
+}
+getUser();
+```
+
+요청 도중 발생한 에러를 처리하려면 try catch문으로 감싸야한다.
+
+```jsx
+//try catch
+async function getUser1() {
+  try {
+    const response = await axios.get('https://api.github.ocm/users/mayashavin')
+    user.value = response.data
+  } catch (error) {
+    err.value = error
+  }
+}
+getUser1()
+```
+
+아래는 axios로 Github에서 프로필을 조회한 후 화면에 정보를 표시하는 컴포넌트다, axios의 요청이 성공적으로 완료되면 프로필 정보가 렌더링된다.
+
+```jsx
+<script lang="ts" setup>
+import axios from 'axios'
+import {ref} from 'vue'
+type User ={
+    name: string;
+    bio: string;
+    avatar_url: string;
+    twitter_username: string;
+    blog: string;
+}
+const user = ref<User>()
+const err = ref<unknown>(null)
+
+async function getUser1(){
+    try{
+        const response = await axios.get('https://api.github.ocm/users/mayashavin');
+        user.value = response.data;
+    }catch(error){
+        err.value = error;
+    }
+
+}
+getUser1();
+</script>
+<template>
+    <div class="user-profile" v-if="user">
+        <img :src="user.avatar_url" :alt="`${user.name} Avatar`" width="200" />
+        <div>
+            <h1>{{ user.name }}</h1>
+            <p>{{ user.bio }}</p>
+            <p>Twitter : {{ user.twitter_username }}</p>
+            <p>Blog: {{ user.blog }}</p>
+        </div>
+    </div>
+</template>
+```
+
+비슷한 방식으로 에러가 발생했을 때 메시지를 표시할 조건문을 추가할 수도 있다.
+
+```
+    <div class="error" v-else-if="err">
+        {{ err }}
+    </div>
+```
+
+컴포넌트가 생성되는 도중에 비동기 요처을 실행하면 Vue 내부에는 어떤 일이 벌어질까? 컴포넌트의 라이프사이클은 동기식으로 진행된다. 즉, Vue는 비동기 요청과 무관하게 컴포넌트 생성 작업을 계속 진행한다. 이러한 특성으로 인해 런타임 도중에 다양한 컴포넌트에서 서로 다른 데이터 요청을 처리하면 특수한 조치가 필요하다.
+
+## 6.4 런타임 중 비동기 데이터 요청
+
+Vue는 항상 동기식으로 동작한다. 실행 도중 비동기 요청이 발생해도 Vue는 요청이 완료될 때까지 기다리지 않고 작업을 계속한다. 그런 다음 컴포넌트 생성 프로세스가 끝나면 비동기 요청 실행 순서에 따라 해결/거부 결과를 차례로 처리한다.
+
+컴포넌트의 onBeforeMounted, onMounted,onUpdated 훅에 다음과 같이 콘솔 로그를 추가해 보자.
+
+```jsx
+<script lang="ts" setup>
+import { onBeforeMount, onMounted, onUpdated, ref } from 'vue';
+import axios from 'axios';
+type User ={
+    name: string;
+    bio: string;
+    avatar_url: string;
+    twitter_username: string;
+    blog: string;
+}
+
+type Error ={
+    message: string;
+}
+const user = ref<User>()
+const err =  ref<Error>()
+
+async function getUser1(){
+    try{
+        const response = await axios.get('https://api.github.com/users/mayashavin');
+        user.value = response.data;
+        console.log(user.value?.name);
+
+    }catch(error){
+         err.value = { message: (error as Error).message };
+    }
+
+}
+
+onBeforeMount(async()=> {
+    console.log('created');
+    getUser1();
+})
+onMounted(()=>{
+    console.log('mounted');
+})
+onUpdated(()=>{
+    console.log('updated');
+})
+
+</script>
+```
+
+브라우저 콘솔을 보면 아래와 같이 로그가 출력된다.
+
+```jsx
+created
+MyComponent.vue:35 mounted
+MyComponent.vue:22 Maya Shavin
+```
+
+비동기 요청이 해결/거부되고 컴포넌트 데이터가 변경되면 Vue 렌더러가 컴포넌트 업데이트 프로세스를 트리거한다. Vue가 DOM에 컴포넌트를 마운팅하는 시점은 아직 응답 데이터가 없다. 따라서 서버 데이터를 받기 전까지는 컴포넌트의 로딩 상태를 관리해야한다.
+
+아래 처럼 컴포넌트 데이터에 loading 프로퍼티를 추가하고 요청이 해결/거부된 다음 로딩 상태를 비활성화시킬 수 있다.
+
+```jsx
+const loading = ref<boolean>()
+
+async function getUser1(){
+  loading.value = true;
+    try{
+        const response = await axios.get('https://api.github.com/users/mayashavin');
+        user.value = response.data;
+        console.log(user.value?.name)
+
+    }catch(error){
+         err.value = { message: (error as Error).message };
+    }finally{
+      loading.value = false
+    }
+
+}
+```
+
+그리고 템플릿 섹션에 v-if 로딩을 추가한다.
+
+```jsx
+<template>
+    <div v-if="loading">
+      Loading...
+    </div>
+    <div class="user-profile" v-else-if="user">
+        <img :src="user.avatar_url" :alt="`${user.name} Avatar`" width="200" />
+        <div>
+            <h1>{{ user.name }}</h1>
+            <p>{{ user.bio }}</p>
+            <p>Twitter : {{ user.twitter_username }}</p>
+            <p>Blog: {{ user.blog }}</p>
+        </div>
+    </div>
+    <div class="error" v-else-if="err">
+        {{ err.message}}
+    </div>
+</template>
+```
+
+이 코드는 비동기 요청이 진행되는 동안 로딩 메시지를 렌더링하고 요청이 해결되면 사용자의 프로필 정보를 표시하고 실패하면 에러 메시지를 내보낸다.
+
+재사용 래퍼 컴포넌트를 만들어 비동기 데이터 요청에 따른 다양한 상태를 처리하는 방법도 있다, 그 중에는 목록 컴포넌트를 로딩하는 동안 화면에 내보일 스켈레톤 플레이스 홀더가 있다.
+
+## 6.5 재사용 fetch 컴포넌트 생성
+
+비동기 데이터 요청 상태 처리는 Vue 컴포넌트의 공통적 과제다. 로딩 상태는 일반적으로 로딩 메시지나 회전 아이콘으로 UI에 표시하고 요청이 거부됐을 때는 에러 컴포넌트로 화면을 꾸미곤 한다. 이러한 부분에 공통적으로 사용할 FetchComponent를 만들어 보자.
+
+FetchComponent의 template 섹션은 slot과 v-if를 이용해 세 가지 영역을 구현한다.
+
+### loading: 로딩 메시지를 표시할 슬롯
+
+이 슬롯은 컴포넌트의 isLoading 상태에 따라 렌더링한다.
+
+### error 에러 메시지를 표시할 슬롯
+
+error 객체를 슬롯 props로 전달하며 error가 있을 때만 에러 미싲를 렌더링한다.
+
+### default 수신 data가 있을 때 컴포넌트 컨텐츠를 표시할 기본 슬롯
+
+슬롯 props로 data를 전달한다.
+
+또한 에러와 로딩 메시지를 기본 메시지 대신 표시하기 위해 다음과 같이 slot에 이름을 지정한다.
+
+```jsx
+<template>
+  <slot name="loading" v-if="isLoading">
+    <div class="loading-message">Loading...</div>
+  </slot>
+  <slot :data="data" v-if="data"></slot>
+  <slot name="error" v-if="error">
+    <div class="error">
+      <p>Error: {{ error.message }}</p>
+    </div>
+</template>
+
+<script lang="ts" setup>
+import { ref } from 'vue';
+
+const data = ref<object | undefined>();
+const error = ref<Error | undefined>();
+const isLoading = ref(false);
+
+</script>
+```
+
+컴포넌트 요청 URL과 요청 메서드를 prop으로 전달받는다.
+
+```jsx
+const props = defineProps({
+  url: {
+    type: String,
+    required: true,
+  },
+  method: {
+    type: String,
+    default: "GET",
+  },
+})
+
+async function ferchData() {
+  try{
+    const response = await fetch(props.url, {
+      method: props.method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    data.value = await response.json();
+  } catch (err) {
+    error.value = err as Error;
+  } finally {
+    isLoading.value = false;
+  }
+}
+ferchData();
+```
+
+- data의 타입이 사전에 정해져 있다면 any 또는 Object 대신 정확한 타입을 지정하는 것이 좋다. 그래야 타입스크립트의 유효성 검사 범위에 포함된다.
+
+```jsx
+<template>
+  <slot name="loading" v-if="isLoading">
+    <div class="loading-message">Loading...</div>
+  </slot>
+  <slot :data="data" v-if="data"></slot>
+  <slot name="error" v-if="error">
+    <div class="error">
+      <p>Error: {{ error.message }}</p>
+    </div>
+  </slot>
+</template>
+
+<script lang="ts" setup>
+import { ref,defineProps } from 'vue';
+
+const data = ref<object | undefined>();
+const error = ref<Error | undefined>();
+const isLoading = ref(false);
+
+const props = defineProps({
+  url: {
+    type: String,
+    required: true,
+  },
+  method: {
+    type: String,
+    default: "GET",
+  },
+})
+
+async function ferchData() {
+  try{
+    const response = await fetch(props.url, {
+      method: props.method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    data.value = await response.json();
+  } catch (err) {
+    error.value = err as Error;
+  } finally {
+    isLoading.value = false;
+  }
+}
+ferchData();
+</script>
+
+```
+
+```jsx
+<template>
+  <FetchComponent url="https:/api.github.com/users/mayashavin">
+    <template #default="defaultProps">
+      <div class="user-profile">
+        <img
+          :src="(defaultProps.data as User).avatar_url"
+          :alt="(defaultProps.data as User).name"
+          width="200"
+          />
+          <div>
+            <h1>{{ (defaultProps.data as User).name }}</h1>
+            <p>{{ (defaultProps.data as User).bio }}</p>
+            <p>Twitter : {{  (defaultProps.data as User).twitter_username }}</p>
+            <p>Blog : {{  (defaultProps.data as User).blog }} </p>
+          </div>
+      </div>
+    </template>
+  </FetchComponent>
+</template>
+
+<script lang="ts" setup>
+import FetchComponent from '@/components/do/ch06/6_5_fetch/FetchComponent.vue';
+import type {User} from "@/types/ch06/User"
+
+</script>
+```
+
+- FetchComponent를 사용하고 요청 URL을 prop으로 전달한다.
+- 컴포넌트 콘텐츠를 #default로 감싸고 template으로 지정한다. 또한 이 슬롯에 전달된 props를 default props 객체에 바인딩한다. defaultProps.data는 Object 타입이므로 타입 스크립트 유효성을 검사를 거치도록 User로 캐스팅한다.
+- defaultProps.data로 요청 결과 데이터에 접근하고 UI에 값을 표시한다.
+- 데이터를 가져오던 기존 로직 코드는 모두 제거한다.
+  Vue 컴포넌트 UI에서 외부 데이터를 요청하고 에러를 처리할 수 있다. 그러나 Vue가 컴포넌트를 생성할 때마다 데이터를 가져오는 방식은 최선이 아니다 특히 컴포넌트의 데이터가 자주 변경되지 않는 경우 더욱 그렇다.
+
+이러한 문제가 단적으로 드러나는 상황은 웹 애플리케이션의 페이지를 전환할 때다. 페이지 데이터는 뷰를 처음 로드할 때 한 번만 거져와야 한다. 따라서 이런 경우에는 브라우저 로컬 저장소를 외부 데이터베이스로 삼거나 Vuex, 피니아 등의 상태 관리 서비스로 데이터를 캐시에 저장해야 한다.
+
+로컬 저장소는 브라우저에 내장된 localStorage API로 다룬다. 가령 다음은 사용자의 GitHub 프로필 데이터를 로컬 저장소에 저장하는 코드다.
+
+```jsx
+localStorage.setItem('user', JSON.stringfy(user))
+```
+
+브라우저의 localStorage는 각 항목을 문자열로 저장하므로, 저장할 객체는 다음과 같이 문자열로 변환해야 한다.
+
+```jsx
+const user = JSON.parse(localStorage.getItem('user'))
+```
+
+아래 코드는 페이지를 처음 로드할 때만 비동기 호출을 실행한다. 첫 실행 때 데이터를 성공적으로 저장했다면 다음 부터는 로컬 저장소에서 직접 로드한다.
+
+- 실제 애플리케이션과 localStorage
+  localStorage에는 몇 가지 제약 사항이 있으므로 실제 애플리케이션에서는 사용하지 않는 것이 좋다. 브라우저는 사설/익명 세션의 localStorage를 사설/익명 세션의 localStorage를 매번 초기화한다. 사용자 또한 localStorage 기능을 끌 수 있다. 따라서 localStorage 대신에 Vuex 또는 피니아 등의 상태 관리 도구를 사용하는 것이 좋다.
+
+```jsx
+<script lang="ts" setup>
+import FetchComponent from '@/components/do/ch06/6_5_fetch/FetchComponent.vue'
+import type { User } from '@/types/ch06/User'
+import axios from 'axios'
+
+async function getUser() {
+  try {
+    console.log('getUser')
+
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    if (user === '{}') return (user.value = user)
+    const response = await axios.get('https://api.github.com/users/mayashavin')
+    user.value = response.data
+    localStorage.setItem('user', JSON.stringify(user.value))
+    console.log(user.value)
+  } catch (err) {
+    console.error(err)
+  }
+}
+getUser()
+</script>
+```

@@ -2,7 +2,6 @@
   <FetchComponent url="https:/api.github.com/users/mayashavin">
     <template #default="defaultProps">
       <div class="user-profile">
-        11
         <img
           :src="(defaultProps.data as User).avatar_url"
           :alt="(defaultProps.data as User).name"
@@ -26,14 +25,11 @@ import axios from 'axios'
 
 async function getUser() {
   try {
-    console.log('getUser')
-
     const user = JSON.parse(localStorage.getItem('user') || '{}')
-    if (user === '{}') return (user.value = user)
+    if (user) return (user.value = user)
     const response = await axios.get('https://api.github.com/users/mayashavin')
     user.value = response.data
     localStorage.setItem('user', JSON.stringify(user.value))
-    console.log(user.value)
   } catch (err) {
     console.error(err)
   }
