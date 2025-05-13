@@ -3577,3 +3577,180 @@ async function getUser() {
 getUser()
 </script>
 ```
+# 250513 7.1 렌더함수와 JSX
+Vue는 컴포넌트를 렌더링할 때 Vue 컴파일러 API를 통해 HTML 탬플릿을 가상 DOM으로 컴파일한다. Vue 컴포넌트 데이터가 갱신되면 Vue는 내부 렌더 함수를 트리거하며, 바뀐 값을 가상 DOM으로 전달한다.
+
+대부분의 컴포넌트는 template 영역을 컴파일하고 렌더링한다. 그러나 일부 특수한 작업은 HTML 탬플릿 분석 단계를 우회해야 한다. 성능 최적화, 서버 사이드 렌더링 애플리케이션, 동적 컴포넌트 라이브러리 등의 작업이 대표적인 사례다. 이런 경우render()로 가상 DOM을 직접 렌더링하고 가상 노드를 변환하면 템플릿 컴파일 프로세스를 건너뛸 수 있다.
+
+### 7.1.1 렌더 함수
+
+Vue2에서 render() 함수는 createElement 콜백을 파라미터로 받고 createElement에 인수를 전달한 다음 유효한 VNode를 반환한다. 이러한 createElement 콜백은 일반적으로 h함수로 반환한다.
+
+vue3에서는 h함수를 파라미터로 사용하지 않고 대신 vue 패키지에서 제공하는 전역 함수 h로 VNode를 생성한다. 
+
+- h는 하이퍼자바스크립트를 의미
+
+```jsx
+import {createApp, h} from 'vue'
+const App ={
+    render(){
+        return h(
+            'div',
+            {id: 'test-id'},
+            'this is a render function test with Vue'
+        )
+    }
+}
+```
+
+- 렌더 함수의 다중 루트 노드 지원
+: Vue 3는 컴포넌트 템플릿에 복수의 루트 노드를 둘 수 있다. 이 때 render()는 VNode 배열을 반환하며, 각 VNode는 모두 동일한 DOM 계청 수준에 주입된다.
+
+```jsx
+import { createApp, h } from 'vue'
+
+const App = {
+    render() {
+        return h(
+            'div',
+            { id: 'test-id' },
+            'this is a render function test with Vue'
+        )
+    }
+}
+
+const app = createApp(App) // App을 Vue 인스턴스로 생성
+app.mount('#app')
+
+```
+
+### 7.1.2 h 함수와 VNode
+
+vue는 매우 유연하게 h함수를 설계했다. h 함수의 세 가지 입력 파라미터와 다양한 타입을 나열한다.
+
+| 파라미터 | 필수 | 데이터 타입 | 설명 |
+| --- | --- | --- | --- |
+| 컴포넌트 | 예 | 문자열, 객체, 함수 | 문자열 텍스트, HTML 태그 엘리먼트 컴포넌트 함수, 옵션 객체 형태로 전달할 수 있다. |
+| props | 아니요 | 객체 | 컴포넌트에 전달할 모든 props 속성, 이벤트를 담은 객체, template에 작성하는 방식과 비슷하다. |
+| 중첩 자손 | 아니요 | 문자열, 배열, 객체 | VNode 목록, 텍스트 컴포넌트, slots 객체 형태로 자식 노드를 전달한다. |
+
+h 함수의 문법은 다음과 같다.
+
+```jsx
+h(component,{/*props*/},children)
+```
+
+가령 루트 엘리먼트가 div 태그이며 내부에 id, 인라인 border 스타일 하나의 input 엘리먼트가 있는 컴포넌트를 가정해보자. 이러한 컴포넌트는 다음과 같이 h 함수로 생성할 수 있다.
+
+```jsx
+import { createApp, h } from 'vue'
+
+const inputElem = h(
+    'input',
+    {
+        placeholder:'Enter some text',
+        type: 'text',
+        id: 'text-input'
+    }
+)
+const comp = h(
+    'div',
+    {
+        id: 'my-test-comp',
+        style: {border: '1px solid blue'}
+    },
+    inputElem
+
+)
+
+const App = {
+    render() {
+        return h(
+            comp
+        )
+    }
+}
+
+const app = createApp(App) // App을 Vue 인스턴스로 생성
+app.mount('#app')
+
+```
+
+### 7.1.3 렌더 함수와 자바스크립트 XML
+
+JSX(자바스크립트 XML)은 자바스크립트 안에서 HTML 코드를 작성할 수 있도록 리액트 프레임워크가 도입한 자바스크립트의 확장이다. JSX는 다음과 같은 형식으로 HTML과 자바스크립트 코드를 함께 작성한다.
+
+```jsx
+const JSXComp =<div>This is a JSX components</div>
+```
+
+이 코드는 “This is a JSX component”라는 텍스트가 담긴 div 태그 렌더 컴포넌트다. 이 컴포넌트는 다음과 같이 render함수에서 그대로 사용할 수 있다.
+
+```jsx
+import {createApp} from 'vue'
+const JSXComp = <div>This is a JSX compnent</div>
+const App ={
+    render(){
+        return JSXComp
+    }
+}
+const app = createApp(App)
+app.mount("#app")
+```
+
+Vue 3.0은 기본적으로 JSX를 지원하지만 사용 문법은 Vue 템플릿과 다르다. 데이터를 바인딩하려면  단일 중괄호를 사용한다.
+
+```jsx
+import {createApp} from 'vue'
+const name = 'JSX'
+const JSXComp = <div>This is a {name} compnent</div>
+const App ={
+    render(){
+        return JSXComp
+    }
+}
+const app = createApp(App)
+app.mount("#app")
+```
+
+동적 데이터도 같은 방식으로 바인딩한다. 표현식을 ‘’로 감쌀 필요없이 다음 예시처럼 div의 id 속성에 값을 지정할 수 있다.
+
+```jsx
+const id = 'jsx-comp'
+const JSXComp = <div id = {id}>This is a {name} compnent</div>
+```
+
+Vue와 리액트는 바인딩 방식이 약간 다르다. 가령 Vue는 리액트처럼 class를 className으로 변형하지 않고 원래 형태를 유지한다. 엘리먼트의 이벤트 리스너도 마찬가지다(on-Click 대신 onclick을 사용한다.) 옵션 API로 작성한 Vue 컴포넌트도 components에 JSX컴포넌트를 등록할 수 있다. JSX 컴포넌트와 render 함수를 결합하면 동적 컴포넌트를 편리하게 만들 수 있으며 대부분의 경우 가독성이 향상된다.
+## 7.2 기능성 컴포넌트
+기능성 컴포넌트는 무상태 컴포넌트이며 통상적인 컴포넌트 라이프사이클을 따르지 않는다. 옵션 API로 만드는 일반 컴포넌트와 달리 기능성 컴포넌트는 렌더 함수를 반환하는 일종의 함수 형태로 표현한다.
+
+기능성 컴포넌트는 상태를 저장하지 않으므로 this 인스턴스에 접근할 수 없다. 대신 Vue는 컴포넌트 외부의 props와 context를 함수 인수로 전달한다. 기능성 컴포넌트는 vue 패키지 전역함수 h()로 가상 노드 인스턴스를 생성해 반환하며 전체 구문은 다음과 같다.
+
+```jsx
+import {h} from 'vue'
+
+export function MyFuctionComp(props, context){
+    return h()
+}
+```
+
+context는 컴포넌트의 컨텍스트 프로퍼티들을 노출한다. 여기에는 이벤트 이미터가 담긴 emits, 상위 컴포넌트에서 전달된 attrs, 컴포넌트의 중첩 엘리먼트가 담긴 slots 등이 포함된다.
+
+heading 엘리먼트를  표시하는 컴포넌트인 MyHeading을 만들어보자. 이 컴포넌트는 전달받은 모든 텍스트를 헤딩 태그로 출력하며 해당 단계는 level props로 전달받는다.
+
+예를 들어 “Hello World” 텍스트를 2단계 헤딩 태그로 표시하려면 다음과 같이 사용한다.
+
+```jsx
+import {h} from 'vue'
+
+export function MyFuctionComp(props, context){
+    return h()
+}
+
+export function MyHeading(props, context){
+    const heading =`h${props.level}`
+    return h(heading, context.$attrs, context.$slots);
+}
+```
+
+기능성 컴포넌트는 Vue의 렌더링 프로세스를 거치지 않는다. 대신 Vue는 렌더러 파이프라인 진행 도중 기능성 컴포넌트 가상 노드를 직접 선언한다. 이러한 생성 원리상 기능성 컴포넌트는 중첩된 슬롯이나 속성을 가질 수 없다.
