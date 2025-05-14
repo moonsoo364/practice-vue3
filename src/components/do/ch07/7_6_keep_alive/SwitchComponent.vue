@@ -1,6 +1,6 @@
 <template>
     <div>
-        <keep-alive max="2">
+        <keep-alive max="1">
             <component :is="activeComp"/>
         </keep-alive>
         <div>
