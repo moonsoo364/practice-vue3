@@ -1,42 +1,15 @@
 <template>
-  <FetchComponent url="https:/api.github.com/users/mayashavin">
-    <template #default="defaultProps">
-      <div class="user-profile">
-        11
-        <img
-          :src="(defaultProps.data as User).avatar_url"
-          :alt="(defaultProps.data as User).name"
-          width="200"
-        />
-        <div>
-          <h1>{{ (defaultProps.data as User).name }}</h1>
-          <p>{{ (defaultProps.data as User).bio }}</p>
-          <p>Twitter : {{ (defaultProps.data as User).twitter_username }}</p>
-          <p>Blog : {{ (defaultProps.data as User).blog }}</p>
-        </div>
-      </div>
-    </template>
-  </FetchComponent>
+    <div>
+        <h1>{{ truncateText }}</h1>
+    </div>
 </template>
+<script setup lang="ts">
+import { inject } from 'vue'
 
-<script lang="ts" setup>
-import FetchComponent from '@/components/do/ch06/6_5_fetch/FetchComponent.vue'
-import type { User } from '@/types/ch06/User'
-import axios from 'axios'
-
-async function getUser() {
-  try {
-    console.log('getUser')
-
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    if (user === '{}') return (user.value = user)
-    const response = await axios.get('https://api.github.com/users/mayashavin')
-    user.value = response.data
-    localStorage.setItem('user', JSON.stringify(user.value))
-    console.log(user.value)
-  } catch (err) {
-    console.error(err)
-  }
+interface Plugins {
+  truncate: (text: string) => string
 }
-getUser()
+
+const plugins = inject<Plugins>('plugins')
+const truncateText = plugins?.truncate('My 2nd truncated text') ?? ''
 </script>

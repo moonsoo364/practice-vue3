@@ -5,7 +5,10 @@ export default {
     //intall
     const truncate = (str: string) => {
       if (str.length > options.limit) {
-        return `${str.slice(0, options.limit)}...`
+        const sliced :string = str.slice(0, options.limit);
+        console.log(sliced);
+        
+        return `${sliced}...`
       }
       return str
     }
