@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import {RouterView} from 'vue-router';
 </script>
 
 <template>
-  <div id="modal"></div>
-  <MyComponent />
+  <RouterView class="view"/>
 </template>
 
 

@@ -3754,3 +3754,495 @@ export function MyHeading(props, context){
 ```
 
 기능성 컴포넌트는 Vue의 렌더링 프로세스를 거치지 않는다. 대신 Vue는 렌더러 파이프라인 진행 도중 기능성 컴포넌트 가상 노드를 직접 선언한다. 이러한 생성 원리상 기능성 컴포넌트는 중첩된 슬롯이나 속성을 가질 수 없다.
+# 250514 7.3 ~ 7.6
+## 7.3 기능성 컴포넌트의 props와 emits 정의
+다음은 기능성 컴포넌트의 props와 emits을 명시적으로 정의하는 구문이다.
+
+```jsx
+MyfunctionComp.props = ['prop-one','prop-two']
+MyFunctionComp.emits = ['event-one', 'event-two']
+```
+
+context.props를 직접 정의하지 않으면 context.attr와 동일한 값이 지정된다. context.attrs는 컴포넌트에 전달된 모든 속성을 담고 있다.
+
+기능성 컴포넌트는 컴포넌트 렌더링을 프로그램 방식으로 제어하는 강력한 도구이다. 특히 까다로운 사용자 요건을 처리하기 위한 저수준 유연성을 갖춘 컴포넌트 라이브러리를 제작할 때 매우 유용하다.
+## 7.4 Vue 플러그인으로 전역 커스텀 기능 추가하기
+Vue 애플리케이션은 서드 파티 라이브러리 또는 커스텀 기능을 플러그인 형태로 추가하고 전역적으로 사용할 수 있다. Vue 플러그인은 install()이라는 단일 메서드를 노출하는 객체이며, 자신의 설치 코드를 담고 있다.
+
+```jsx
+import type { App } from 'vue'
+
+export default {
+  install(app: App<Element>, options: any) {
+    //intall
+    const truncate = (str: string) => {
+      if (str.length > options.limit) {
+        return `${str.slice(0, options.limit)}...`
+      }
+      return str
+    }
+    app.config.globalProperties.$truncate = truncate
+  },
+}
+
+```
+
+Vue 엔진은 truncate 플러그인을 설치하고 초기 limit를 10자로 설정한다. 플러그인은 app 인스턴스에 속한 모든 Vue 컴포넌트에서 사용할 수 있다. 다음과 같이 script 섹션에서 this.$truncate로 template 섹션에서 $truncate로 이 플러그인을 호출할 수 있다.
+
+```tsx
+import { createApp, defineComponent } from 'vue'
+import truncate from '@/main_ts/ch07/7_4_plugin/plugin.ts'
+
+// import './assets/main.css'
+//원
+
+const App = defineComponent({
+  template: `
+    <h1> {{ $truncate('My truncated long text') }} </h1>
+    <h2> {{ truncatedText }} </h2>
+  `,
+  data() {
+    return {
+      truncatedText: this.$truncate('My 2nd truncated text'),
+    }
+  },
+})
+
+const app = createApp(App)
+app.use(truncate, { limit: 10 }) // 플러그인 사용
+
+app.mount('#app')
+
+```
+
+$truncate는 오직 `template` 섹션 혹은 options API가 적용된 script 섹션에서 호출할 수 있다. `<script setup>` 과 setup()에서 플러그인을 사용하려면 제공/주입 패턴을 따라야 한다. plugins/truncate.ts의 install 함수에 다음과 같이 제공 코드를 추가한다.
+
+```jsx
+import type { App } from 'vue'
+
+export default {
+  install(app: App<Element>, options: any) {
+    //intall
+    const truncate = (str: string) => {
+      if (str.length > options.limit) {
+        const sliced :string = str.slice(0, options.limit);
+        console.log(sliced);
+        
+        return `${sliced}...`
+      }
+      return str
+    }
+    app.config.globalProperties.$truncate = truncate
+    app.provide('plugins', { truncate }) // provide
+  },
+}
+
+```
+
+```jsx
+import { createApp } from 'vue'
+import truncate from '@/main_ts/ch07/7_4_plugin/plugin_setup.ts'
+
+//SFC파일
+import MyComponent from './components/do/MyComponent.vue';
+
+// import './assets/main.css'
+//원본 코드
+import { createPinia } from 'pinia'
+
+import App from './App.vue'
+import router from './router'
+
+const app = createApp(App)
+app.use(truncate, { limit: 10 }) // 플러그인 사용
+app.use(createPinia())
+app.component('MyComponent', MyComponent);
+app.use(router)
+app.mount("#app")
+
+```
+
+```jsx
+<template>
+    <div>
+        <h1>{{ truncateText }}</h1>
+    </div>
+</template>
+<script setup lang="ts">
+import { inject } from 'vue'
+
+interface Plugins {
+  truncate: (text: string) => string
+}
+
+const plugins = inject<Plugins>('plugins')
+const truncateText = plugins?.truncate('My 2nd truncated text') ?? ''
+</script>
+```
+
+플러그인은 전역 메서드를 구성하고 다른 애플리케이션에서 재사용하려 할 때 매우 유용하다. 또한 외부 라이브러리를 설치하는 과정에 추가 로직을 작성할 수 있다는 장점이 있다. Axios로 외부 데이터를 가져오거나 i18n로 지역화를 구현하는 경우가 대표적이다.
+## 7.5 component 태그를 이용한 동적 렌더링
+component 태그는 Vue 컴포넌트를 렌더링할 플레이스홀더 역할을 하며, 다음과 같이 isProps로 컴포넌트 참조명을 지정한다.
+
+```jsx
+<component is="targetCompnentName" />
+```
+
+대상 컴포넌트가 app에 등록됐거나 다른 부모 컴포넌트의 component에서 사용됐다고 가정해보자. 이 경우 Vue 엔진은 컴포넌트 참조명으로 대상 컴포넌트를 조회하고 component 태그를 실제 컴포넌트로 교체할 수 있다. 대상 컴포넌트는 <component>로 전달된 모든 props도 상속받는다. 
+
+다음과 같이 ‘Hello World’ 텍스트를 렌더링하는 HelloWorld 컴포넌트가 있다고 가정해보자.
+
+```jsx
+<template>
+	<div>Hello World</div>
+</template> 
+```
+
+이 컴포넌트를 App에 등록하면 다음과 같이 <component> 태그를 통해 동적으로 렌더링할 수 있다.
+
+```jsx
+<template>
+  <component :is="HelloWorld" />
+</template>
+
+<script setup lang="ts">
+import HelloWorld from '@/components/do/ch07/HelloWorld.vue'
+</script>
+```
+
+또한 v-bind 디렉티브 또는 : 문자로 is props에 참조 컴포넌트를 바인딩 할 수 있다. 다음 과 같이 코드를 고치면 이전 예제의 두 코드 블록을 하나의 App 컴포넌트로 압축할 수 있다.
+
+```jsx
+<template>
+  <component :is="myComp" />
+</template>
+
+<script lang="ts">
+import HelloWorld from '@/components/do/ch07/HelloWorld.vue'
+import { defineComponent } from 'vue';
+export default defineComponent({
+    data() {
+        return{
+            myComp:{
+                template: '<div>Hello'
+            }
+        }
+    },
+});
+</script>
+```
+
+위 코드에서 참조 컴포넌트 myComp는 옵션 API 방식으로 작성되었지만 SFC 컴포넌트를  임포트하고 전달하는 방법도 있다. 두 방식 모두 출력 결과는 같다.
+
+<component> 태그 활용법은 무궁무진하다. 갤러리 컴포넌트를 예를 들자면, 각 갤러리 항목에 component를 적용해 Card 혹은 Row 컴포넌트를 선택적으로  교체하여 렌더링할 수 있다.
+
+그러나 Vue 컴포넌트를 전환하는 과정에서 현재 엘리먼트를  완전히 언마운팅하고 컴포넌트의 데이터 상태를 모두 지운다. 결국 이전 컴포넌트로 전환한다 해도 새로운 데이터 상태로 새로운 인스턴스가 만들어 지는 셈이다. 이러한 재생성의 단점을 보완하고, 향후 컴포넌트 전환 시 과거 엘리먼트의 상태를 보존하려면 keep-alive 컴포넌트를 사용해야 한다.
+## 7.6 keep-alive로 컴포넌트 인스턴스를 활성 상태로 유지하기
+<keep-alive>는 Vue 내장 컴포넌트이며 비활성 모드에서 동적 엘리먼트를 감싸고 컴포넌트의 상태를 보존하는 역할을 한다.
+
+StepOne과 StepTwo라는 두 컴포넌트가 있다고 가정해보자. StepOne 컴포넌트에는 다음과 같이 문자열 input 필드가 있으며 로컬 데이터의 name 프로퍼티를 v-model로 양방향 바인딩하고 있다.
+
+```jsx
+<template>
+    <div>
+        <label for="name">Step one's input</label>
+        <input v-model="name" type="text" id="name" />
+    </div>
+</template>
+<script lang="ts" setup>
+import {ref} from 'vue';
+const name = ref<string>("")
+</script>
+```
+
+```jsx
+<template>
+    <div>
+        {{ name }}
+    </div>
+</template>
+<script lang="ts" setup>
+    const name = "Step 2";
+</script>
+```
+
+App 템플릿은 compnent 태그에서 로컬 데이터 activeComp 프로퍼티를 참조해 컴포넌트를 렌더링한다. activeComp의 초기값은 StepOne이며 이 값을 StepTwo로 번갈아하는 버튼이 있다.
+
+```jsx
+<template>
+    <div>
+        <keep-alive>
+            <component :is="activeComp"/>
+        </keep-alive>
+        <div>
+            <button @click="activeComp ='StepOne'" v-if="activeComp === 'StepTwo'">
+                Go to Step Two
+            </button>
+            <button @click="activeComp ='StepTwo'" v-else>
+                Go to Step One
+            </button>
+        </div>
+    </div>
+</template>
+<script lang="ts" >
+import { defineComponent } from 'vue';
+import StepOne from '@/components/do/ch07/7_6_keep_alive/StepOne.vue'
+import StepTwo from '@/components/do/ch07/7_6_keep_alive/StepTwo.vue'
+
+export default defineComponent({
+    components: { StepOne, StepTwo},
+    data() {
+      return {
+        activeComp: "StepOne"
+      }  
+    },
+})
+</script>
+```
+
+```jsx
+<template>
+    <div>
+        <label for="name">Step one's input</label>
+        <input v-model="name" type="text" id="name" />
+    </div>
+</template>
+<script lang="ts" setup>
+import {ref} from 'vue';
+const name = ref<string>("")
+</script>
+```
+
+```jsx
+<template>
+    <div>
+        {{ name }}
+    </div>
+</template>
+<script lang="ts" setup>
+    const name = "Step 2";
+</script>
+```
+
+StepOne과 StepTwo를 전환할 때마다 Vue는 input 필드에 입력된 name 프로퍼티 값을 그대로 보존한다. 따라서 StepOne으로 전환할 때 값이 초기화되지 않고 이전 값이 유지된다.
+
+keep-alive가 캐시로 유지할 인스턴스의 최대 개수는 다음과 같이 max props로 정의할 수 있다.
+
+```jsx
+<keep-alive max="2">
+    <component :is="activeComp"/>
+</keep-alive>
+```
+
+위 코드에서 `max=”2”` 설정은 keep-alive 인스턴스의 최대 개수를 2개로 정의한다. 캐시 인스턴스 수가 이를 넘기면 Vue는 가장 먼저 사용됐던 캐시 목록에서 제거하고 새로운 인스턴스를 추가한다.(Least recently used)
+
+# 250515 8.1 ~ 8.2
+## 8.1 라우팅이란
+사용자는 웹을 탐색할 때 브라우저 주소창에 URL을 입력한다. URL은 웹 리소스를 나타내는 주소다. URL은 여러 의미와 요소를 담고 있지만 다음과 같은 큰 구획으로 나눌 수 있다.
+
+위치
+
+요청 리소스의 경로, 웹 개발 시 사전 정의한 경로 패턴을 기준으로 브라우저에 렌더링할 컴포넌트를 결정한다.
+
+쿼리 파라미터
+
+& 기호로 구분된 키-값 쌍이며 추가 정보를 서버에 전달하는 역할을 한다. 페이지 사이에서 데이터를 전달하는 용도로 사용한다.
+
+앵커
+
+`#` 문자에 이은 모든 텍스트, 엘리먼트 id값을 지정해 페이지 내 특정 엘리먼트로 이동하거나 미디어 엘리먼트의 특정 시간으로 이동하는 역할을 한다.
+
+```jsx
+https://mayashavin.com/blog?tag=vue&sortBy=asc#summary
+```
+
+브라우저는 사용자가 입력한 URL을 근거로 서버와 통신하며 서버는 요청 리소스를 반환한다. 리소스는 이미지나 비디오 등의 정적 파일, 웹 페이지나 웹 애플리케이션 등의 동적 페이지로 이루어진다.
+
+싱글 페이지 애플리케이션은 라우팅 메커니즘을 브라우저가 담당하며 브라우저를 새로 고치지 않아도 자연스럽게 페이지 사이를 오갈 수 있다. 라우팅 시스템은 페이지 URL에서 경로 패턴을 분석하고 이에 해당하는 애플리케이션 컴포넌트를 결정한다.
+Vue는 프런트엔드 프레임워크로써 SPA 컴포넌트를 구축하는 틀을 제공하지만 라우팅 서비스는 별개의 문제다. 사용자에게 온전한 내비게이션 경험을 제공하려면 애플리케이션 라우팅 기능이 반드시 필요하다. SPA의 통상적 과제인 히스토리 관리, 북마크 등의 기능을 포함해 라우팅 서비스 전체를 설계하고 개발해야 한다.
+
+## 8.2 Vue 라우터
+Vue 라우터는 Vue 애플리케이션의 공식 라우팅 서비스이며, 페이지 내비게이션 기능과 제어 메커니즘을 제공한다. Vue 라우터로 애플리케이션의 라우팅 시스템을 구성하면 컴포넌트와 페이지를 매핑하고 SPA 클라이언트 측면에서 원활한 사용자 경험을 전달할 수 있다. 
+
+- Vue 라우터 웹사이트에서 공식 문서 API 참고 사례등의 정보를 알 수 있다.
+
+Vue 라우터 기능을 시연할 가상의 피자 주문 시스템을 SPA로 구축해보자. 애플리케이션 헤더에는 Home,About,Pizzas,Login 페이지 링크가 있다.
+
+각 링크는 Vue 애플리케이션 페이지로 연결된다. 따라서 각각의 컴포넌트를 추가하고 views 폴더에 저장할 것이다. 다음은 피자 하우스 코드베이스의 뷰 컴포넌트 목록이다.
+
+HomeView
+환영 메시지와 피자 목록을 표시한다.
+
+AboutView
+애플리케이션에 대한 간단한 설명이 포함된 정보 페이지다.
+
+PizzasView
+주문용 피자 목록을 표시한다.
+
+ContactView
+연락하기 폼을 표시한다.
+
+LoginView
+로그인 폼을 표시한다.
+
+| URL | 컴포넌트 | 라우트 경로 |
+| --- | --- | --- |
+| http://localhost:4000 | HomeView | / |
+| http://localhost:4000/about | AboutView | /about |
+| http://localhost:4000/pizzas | PizzasView | /pizzas |
+| http://localhost:4000/contact | Contact | /contact |
+| http://localhost:4000/login | LoginView | /login |
+
+### 8.2.2 라우트 정의
+
+라우트 페이지 URL에 대응하는 경로 패턴이다. Vue 라우터는 RouteRecordRaw 인터페이스로 설정 객체를 만들어 라우트를 정의한다. 아래는 RouterRecordRaw 배열로 rotues를 설정한 예이다.
+
+```jsx
+import { type RouteRecordRaw } from 'vue-router'
+import HomeView from '@/views/HomeView.vue'
+import AboutView from '@/views/AboutView.vue'
+import PizzasView from '@/views/PizzasView.vue'
+import ContactView from '@/views/ContactView.vue'
+import LoginView from '@/views/LoginView.vue'
+
+const routes:RouteRecordRaw[] =[
+  {
+    path: '/',
+    name: 'home',
+    component: HomeView
+  },
+  {
+    path: '/about',
+    name: 'about',
+    component: AboutView
+  },
+    {
+    path: '/pizzas',
+    name: 'pizzas',
+    component: PizzasView
+  },
+    {
+    path: '/contact',
+    name: 'contact',
+    component: ContactView
+  },
+    {
+    path: '/login',
+    name: 'login',
+    component: LoginView
+  },
+]
+
+export default routes
+
+```
+
+- 명명된 라우트 
+이번 장의 예제는 name 프로퍼티를 지닌 명명된 라우터를 사용한다. 코드 가독성을 높이고 관리하기 쉽게 유지하려면 라우트에 이름을 지정하는 것이 좋다.
+
+### 8.2.3 라우터 인스턴스 생성
+
+라우터 인스턴스는 vue-router 패키지의 createRouter 메서드로 생성한다. 이 메서드의 인수는 RouterOptions 타입 객체이며 주요 프로퍼티는 다음과 같다.
+
+history
+해시 기반 또는 웹 기반 히스토리 모드를 설정하는 객체 웹 방식은 HTML5 히스토리 API로 URL을  읽고 새로고침 없이 페이지를 탐색할 수 있다.
+
+rotues
+라우터 인스턴스에서 사용할 라우트 배열
+
+linkActiveClass
+링크가 활성 상태일 때 적용할 클래스명. 기본값은 router-link-active다.
+
+linkExactActiveClass
+활성 상태의 링크가 정확하게 일치할 때 적용할 클래스명 기본값은 rotuer-link-exact-active
+
+다음 예제는 vue-rotue 패키지의 createWebHistory 메서드로 웹 기반 history 객체를 생성한다. 이 메서드는 베이스 URL 문자열을 선택적 인수로 전달한다.
+
+```jsx
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import HomeView from '@/views/HomeView.vue'
+import AboutView from '@/views/AboutView.vue'
+import PizzasView from '@/views/PizzasView.vue'
+import ContactView from '@/views/ContactView.vue'
+import LoginView from '@/views/LoginView.vue'
+
+const routes:RouteRecordRaw[] =[
+  {
+    path: '/',
+    name: 'home',
+    component: HomeView
+  },
+  {
+    path: '/about',
+    name: 'about',
+    component: AboutView
+  },
+    {
+    path: '/pizzas',
+    name: 'pizzas',
+    component: PizzasView
+  },
+    {
+    path: '/contact',
+    name: 'contact',
+    component: ContactView
+  },
+    {
+    path: '/login',
+    name: 'login',
+    component: LoginView
+  },
+]
+
+export const router = createRouter({
+  history: createWebHistory('http://localhost')
+  ,routes
+})
+
+```
+
+그러나 베이스 URL을 정적 문자열로 지정하는 것은 좋은 방법이 아니다. 베이스 URL 설정은 개발, 프로덕션 등다양한 환경과 무관한 격리된 상태로 유지하는 것이 최선이다. 이러한 취지에서 vite은 BASE_URL 프로퍼티가 포함된 import.meta.env라는 환경 객체를 제공한다. BASE_URL은 .env로 시작하는 전용 환경 파일에 추가하거나 Vite 서버를 실행할 때 명령줄에 지정할 수 있다. 
+
+```jsx
+export const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL)
+  ,routes
+})
+```
+
+### 8.2.4 라우터 인스턴스 탑재
+
+애플리케이션 인스턴스 app은 main.ts 파일에서 초기화한다. router 인스턴스 또한 이곳에서 import하고 app.user 메서드에 인수로 전달한다.
+
+### 8.2.5 RouterView 컴포넌트로 현재 페이지 렌더링하기
+
+URL 경로에 맞추어 뷰를 동적으로 생성하려면 Vue 라우터가 제공하는 플레이스홀더 컴포넌트인 RotuerView를 써야한다. Vue 라우터는 애플리케이션 실행 중에 이 컴포넌트를 URL 패턴 설정과 일치하는 엘리먼트로 교체한다.
+
+```jsx
+<script setup lang="ts">
+import {RouterView} from 'vue-router';
+</script>
+
+<template>
+  <RouterView />
+</template>
+
+<style scoped>
+
+</style>
+
+```
+
+주소창에 /about을 치면 해당 라우트에 맞는 컴포넌트가 화면에 표시된다.
+
+RouterView도 Vue 컴포넌트이므로 props, 속성, 이벤트 리스너를 지정할 수 있으며 RouterView는 이들을 뷰로 전달한다. 다음은 RotuerView에 class를 전달하는 예시다.
+
+```jsx
+
+<template>
+  <RouterView class="view"/>
+</template>
+
+```
+
+이렇게 전달된 class 속성은 렌더 컴포넌트의 최상위 컨테이너 엘리먼트에 지정되며 이를 통해 css 스타일을 제어할 수 있다.
