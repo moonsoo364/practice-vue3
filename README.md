@@ -3577,7 +3577,9 @@ async function getUser() {
 getUser()
 </script>
 ```
+
 # 250513 7.1 렌더함수와 JSX
+
 Vue는 컴포넌트를 렌더링할 때 Vue 컴파일러 API를 통해 HTML 탬플릿을 가상 DOM으로 컴파일한다. Vue 컴포넌트 데이터가 갱신되면 Vue는 내부 렌더 함수를 트리거하며, 바뀐 값을 가상 DOM으로 전달한다.
 
 대부분의 컴포넌트는 template 영역을 컴파일하고 렌더링한다. 그러나 일부 특수한 작업은 HTML 탬플릿 분석 단계를 우회해야 한다. 성능 최적화, 서버 사이드 렌더링 애플리케이션, 동적 컴포넌트 라이브러리 등의 작업이 대표적인 사례다. 이런 경우render()로 가상 DOM을 직접 렌더링하고 가상 노드를 변환하면 템플릿 컴파일 프로세스를 건너뛸 수 있다.
@@ -3586,58 +3588,55 @@ Vue는 컴포넌트를 렌더링할 때 Vue 컴파일러 API를 통해 HTML 탬�
 
 Vue2에서 render() 함수는 createElement 콜백을 파라미터로 받고 createElement에 인수를 전달한 다음 유효한 VNode를 반환한다. 이러한 createElement 콜백은 일반적으로 h함수로 반환한다.
 
-vue3에서는 h함수를 파라미터로 사용하지 않고 대신 vue 패키지에서 제공하는 전역 함수 h로 VNode를 생성한다. 
+vue3에서는 h함수를 파라미터로 사용하지 않고 대신 vue 패키지에서 제공하는 전역 함수 h로 VNode를 생성한다.
 
 - h는 하이퍼자바스크립트를 의미
 
 ```jsx
-import {createApp, h} from 'vue'
-const App ={
-    render(){
-        return h(
-            'div',
-            {id: 'test-id'},
-            'this is a render function test with Vue'
-        )
-    }
+import { createApp, h } from 'vue'
+const App = {
+  render() {
+    return h('div', { id: 'test-id' }, 'this is a render function test with Vue')
+  },
 }
 ```
 
 - 렌더 함수의 다중 루트 노드 지원
-: Vue 3는 컴포넌트 템플릿에 복수의 루트 노드를 둘 수 있다. 이 때 render()는 VNode 배열을 반환하며, 각 VNode는 모두 동일한 DOM 계청 수준에 주입된다.
+  : Vue 3는 컴포넌트 템플릿에 복수의 루트 노드를 둘 수 있다. 이 때 render()는 VNode 배열을 반환하며, 각 VNode는 모두 동일한 DOM 계청 수준에 주입된다.
 
 ```jsx
 import { createApp, h } from 'vue'
 
 const App = {
-    render() {
-        return h(
-            'div',
-            { id: 'test-id' },
-            'this is a render function test with Vue'
-        )
-    }
+  render() {
+    return h('div', { id: 'test-id' }, 'this is a render function test with Vue')
+  },
 }
 
 const app = createApp(App) // App을 Vue 인스턴스로 생성
 app.mount('#app')
-
 ```
 
 ### 7.1.2 h 함수와 VNode
 
 vue는 매우 유연하게 h함수를 설계했다. h 함수의 세 가지 입력 파라미터와 다양한 타입을 나열한다.
 
-| 파라미터 | 필수 | 데이터 타입 | 설명 |
-| --- | --- | --- | --- |
-| 컴포넌트 | 예 | 문자열, 객체, 함수 | 문자열 텍스트, HTML 태그 엘리먼트 컴포넌트 함수, 옵션 객체 형태로 전달할 수 있다. |
-| props | 아니요 | 객체 | 컴포넌트에 전달할 모든 props 속성, 이벤트를 담은 객체, template에 작성하는 방식과 비슷하다. |
-| 중첩 자손 | 아니요 | 문자열, 배열, 객체 | VNode 목록, 텍스트 컴포넌트, slots 객체 형태로 자식 노드를 전달한다. |
+| 파라미터  | 필수   | 데이터 타입        | 설명                                                                                        |
+| --------- | ------ | ------------------ | ------------------------------------------------------------------------------------------- |
+| 컴포넌트  | 예     | 문자열, 객체, 함수 | 문자열 텍스트, HTML 태그 엘리먼트 컴포넌트 함수, 옵션 객체 형태로 전달할 수 있다.           |
+| props     | 아니요 | 객체               | 컴포넌트에 전달할 모든 props 속성, 이벤트를 담은 객체, template에 작성하는 방식과 비슷하다. |
+| 중첩 자손 | 아니요 | 문자열, 배열, 객체 | VNode 목록, 텍스트 컴포넌트, slots 객체 형태로 자식 노드를 전달한다.                        |
 
 h 함수의 문법은 다음과 같다.
 
 ```jsx
-h(component,{/*props*/},children)
+h(
+  component,
+  {
+    /*props*/
+  },
+  children,
+)
 ```
 
 가령 루트 엘리먼트가 div 태그이며 내부에 id, 인라인 border 스타일 하나의 input 엘리먼트가 있는 컴포넌트를 가정해보자. 이러한 컴포넌트는 다음과 같이 h 함수로 생성할 수 있다.
@@ -3645,35 +3644,28 @@ h(component,{/*props*/},children)
 ```jsx
 import { createApp, h } from 'vue'
 
-const inputElem = h(
-    'input',
-    {
-        placeholder:'Enter some text',
-        type: 'text',
-        id: 'text-input'
-    }
-)
+const inputElem = h('input', {
+  placeholder: 'Enter some text',
+  type: 'text',
+  id: 'text-input',
+})
 const comp = h(
-    'div',
-    {
-        id: 'my-test-comp',
-        style: {border: '1px solid blue'}
-    },
-    inputElem
-
+  'div',
+  {
+    id: 'my-test-comp',
+    style: { border: '1px solid blue' },
+  },
+  inputElem,
 )
 
 const App = {
-    render() {
-        return h(
-            comp
-        )
-    }
+  render() {
+    return h(comp)
+  },
 }
 
 const app = createApp(App) // App을 Vue 인스턴스로 생성
 app.mount('#app')
-
 ```
 
 ### 7.1.3 렌더 함수와 자바스크립트 XML
@@ -3681,92 +3673,99 @@ app.mount('#app')
 JSX(자바스크립트 XML)은 자바스크립트 안에서 HTML 코드를 작성할 수 있도록 리액트 프레임워크가 도입한 자바스크립트의 확장이다. JSX는 다음과 같은 형식으로 HTML과 자바스크립트 코드를 함께 작성한다.
 
 ```jsx
-const JSXComp =<div>This is a JSX components</div>
+const JSXComp = <div>This is a JSX components</div>
 ```
 
 이 코드는 “This is a JSX component”라는 텍스트가 담긴 div 태그 렌더 컴포넌트다. 이 컴포넌트는 다음과 같이 render함수에서 그대로 사용할 수 있다.
 
 ```jsx
-import {createApp} from 'vue'
+import { createApp } from 'vue'
 const JSXComp = <div>This is a JSX compnent</div>
-const App ={
-    render(){
-        return JSXComp
-    }
+const App = {
+  render() {
+    return JSXComp
+  },
 }
 const app = createApp(App)
-app.mount("#app")
+app.mount('#app')
 ```
 
-Vue 3.0은 기본적으로 JSX를 지원하지만 사용 문법은 Vue 템플릿과 다르다. 데이터를 바인딩하려면  단일 중괄호를 사용한다.
+Vue 3.0은 기본적으로 JSX를 지원하지만 사용 문법은 Vue 템플릿과 다르다. 데이터를 바인딩하려면 단일 중괄호를 사용한다.
 
 ```jsx
-import {createApp} from 'vue'
+import { createApp } from 'vue'
 const name = 'JSX'
 const JSXComp = <div>This is a {name} compnent</div>
-const App ={
-    render(){
-        return JSXComp
-    }
+const App = {
+  render() {
+    return JSXComp
+  },
 }
 const app = createApp(App)
-app.mount("#app")
+app.mount('#app')
 ```
 
 동적 데이터도 같은 방식으로 바인딩한다. 표현식을 ‘’로 감쌀 필요없이 다음 예시처럼 div의 id 속성에 값을 지정할 수 있다.
 
 ```jsx
 const id = 'jsx-comp'
-const JSXComp = <div id = {id}>This is a {name} compnent</div>
+const JSXComp = <div id={id}>This is a {name} compnent</div>
 ```
 
 Vue와 리액트는 바인딩 방식이 약간 다르다. 가령 Vue는 리액트처럼 class를 className으로 변형하지 않고 원래 형태를 유지한다. 엘리먼트의 이벤트 리스너도 마찬가지다(on-Click 대신 onclick을 사용한다.) 옵션 API로 작성한 Vue 컴포넌트도 components에 JSX컴포넌트를 등록할 수 있다. JSX 컴포넌트와 render 함수를 결합하면 동적 컴포넌트를 편리하게 만들 수 있으며 대부분의 경우 가독성이 향상된다.
+
 ## 7.2 기능성 컴포넌트
+
 기능성 컴포넌트는 무상태 컴포넌트이며 통상적인 컴포넌트 라이프사이클을 따르지 않는다. 옵션 API로 만드는 일반 컴포넌트와 달리 기능성 컴포넌트는 렌더 함수를 반환하는 일종의 함수 형태로 표현한다.
 
 기능성 컴포넌트는 상태를 저장하지 않으므로 this 인스턴스에 접근할 수 없다. 대신 Vue는 컴포넌트 외부의 props와 context를 함수 인수로 전달한다. 기능성 컴포넌트는 vue 패키지 전역함수 h()로 가상 노드 인스턴스를 생성해 반환하며 전체 구문은 다음과 같다.
 
 ```jsx
-import {h} from 'vue'
+import { h } from 'vue'
 
-export function MyFuctionComp(props, context){
-    return h()
+export function MyFuctionComp(props, context) {
+  return h()
 }
 ```
 
 context는 컴포넌트의 컨텍스트 프로퍼티들을 노출한다. 여기에는 이벤트 이미터가 담긴 emits, 상위 컴포넌트에서 전달된 attrs, 컴포넌트의 중첩 엘리먼트가 담긴 slots 등이 포함된다.
 
-heading 엘리먼트를  표시하는 컴포넌트인 MyHeading을 만들어보자. 이 컴포넌트는 전달받은 모든 텍스트를 헤딩 태그로 출력하며 해당 단계는 level props로 전달받는다.
+heading 엘리먼트를 표시하는 컴포넌트인 MyHeading을 만들어보자. 이 컴포넌트는 전달받은 모든 텍스트를 헤딩 태그로 출력하며 해당 단계는 level props로 전달받는다.
 
 예를 들어 “Hello World” 텍스트를 2단계 헤딩 태그로 표시하려면 다음과 같이 사용한다.
 
 ```jsx
-import {h} from 'vue'
+import { h } from 'vue'
 
-export function MyFuctionComp(props, context){
-    return h()
+export function MyFuctionComp(props, context) {
+  return h()
 }
 
-export function MyHeading(props, context){
-    const heading =`h${props.level}`
-    return h(heading, context.$attrs, context.$slots);
+export function MyHeading(props, context) {
+  const heading = `h${props.level}`
+  return h(heading, context.$attrs, context.$slots)
 }
 ```
 
 기능성 컴포넌트는 Vue의 렌더링 프로세스를 거치지 않는다. 대신 Vue는 렌더러 파이프라인 진행 도중 기능성 컴포넌트 가상 노드를 직접 선언한다. 이러한 생성 원리상 기능성 컴포넌트는 중첩된 슬롯이나 속성을 가질 수 없다.
+
 # 250514 7.3 ~ 7.6
+
 ## 7.3 기능성 컴포넌트의 props와 emits 정의
+
 다음은 기능성 컴포넌트의 props와 emits을 명시적으로 정의하는 구문이다.
 
 ```jsx
-MyfunctionComp.props = ['prop-one','prop-two']
+MyfunctionComp.props = ['prop-one', 'prop-two']
 MyFunctionComp.emits = ['event-one', 'event-two']
 ```
 
 context.props를 직접 정의하지 않으면 context.attr와 동일한 값이 지정된다. context.attrs는 컴포넌트에 전달된 모든 속성을 담고 있다.
 
 기능성 컴포넌트는 컴포넌트 렌더링을 프로그램 방식으로 제어하는 강력한 도구이다. 특히 까다로운 사용자 요건을 처리하기 위한 저수준 유연성을 갖춘 컴포넌트 라이브러리를 제작할 때 매우 유용하다.
+
 ## 7.4 Vue 플러그인으로 전역 커스텀 기능 추가하기
+
 Vue 애플리케이션은 서드 파티 라이브러리 또는 커스텀 기능을 플러그인 형태로 추가하고 전역적으로 사용할 수 있다. Vue 플러그인은 install()이라는 단일 메서드를 노출하는 객체이며, 자신의 설치 코드를 담고 있다.
 
 ```jsx
@@ -3812,7 +3811,6 @@ const app = createApp(App)
 app.use(truncate, { limit: 10 }) // 플러그인 사용
 
 app.mount('#app')
-
 ```
 
 $truncate는 오직 `template` 섹션 혹은 options API가 적용된 script 섹션에서 호출할 수 있다. `<script setup>` 과 setup()에서 플러그인을 사용하려면 제공/주입 패턴을 따라야 한다. plugins/truncate.ts의 install 함수에 다음과 같이 제공 코드를 추가한다.
@@ -3827,7 +3825,7 @@ export default {
       if (str.length > options.limit) {
         const sliced :string = str.slice(0, options.limit);
         console.log(sliced);
-        
+
         return `${sliced}...`
       }
       return str
@@ -3844,7 +3842,7 @@ import { createApp } from 'vue'
 import truncate from '@/main_ts/ch07/7_4_plugin/plugin_setup.ts'
 
 //SFC파일
-import MyComponent from './components/do/MyComponent.vue';
+import MyComponent from './components/do/MyComponent.vue'
 
 // import './assets/main.css'
 //원본 코드
@@ -3856,10 +3854,9 @@ import router from './router'
 const app = createApp(App)
 app.use(truncate, { limit: 10 }) // 플러그인 사용
 app.use(createPinia())
-app.component('MyComponent', MyComponent);
+app.component('MyComponent', MyComponent)
 app.use(router)
-app.mount("#app")
-
+app.mount('#app')
 ```
 
 ```jsx
@@ -3881,21 +3878,23 @@ const truncateText = plugins?.truncate('My 2nd truncated text') ?? ''
 ```
 
 플러그인은 전역 메서드를 구성하고 다른 애플리케이션에서 재사용하려 할 때 매우 유용하다. 또한 외부 라이브러리를 설치하는 과정에 추가 로직을 작성할 수 있다는 장점이 있다. Axios로 외부 데이터를 가져오거나 i18n로 지역화를 구현하는 경우가 대표적이다.
+
 ## 7.5 component 태그를 이용한 동적 렌더링
+
 component 태그는 Vue 컴포넌트를 렌더링할 플레이스홀더 역할을 하며, 다음과 같이 isProps로 컴포넌트 참조명을 지정한다.
 
 ```jsx
 <component is="targetCompnentName" />
 ```
 
-대상 컴포넌트가 app에 등록됐거나 다른 부모 컴포넌트의 component에서 사용됐다고 가정해보자. 이 경우 Vue 엔진은 컴포넌트 참조명으로 대상 컴포넌트를 조회하고 component 태그를 실제 컴포넌트로 교체할 수 있다. 대상 컴포넌트는 <component>로 전달된 모든 props도 상속받는다. 
+대상 컴포넌트가 app에 등록됐거나 다른 부모 컴포넌트의 component에서 사용됐다고 가정해보자. 이 경우 Vue 엔진은 컴포넌트 참조명으로 대상 컴포넌트를 조회하고 component 태그를 실제 컴포넌트로 교체할 수 있다. 대상 컴포넌트는 <component>로 전달된 모든 props도 상속받는다.
 
 다음과 같이 ‘Hello World’ 텍스트를 렌더링하는 HelloWorld 컴포넌트가 있다고 가정해보자.
 
 ```jsx
 <template>
-	<div>Hello World</div>
-</template> 
+  <div>Hello World</div>
+</template>
 ```
 
 이 컴포넌트를 App에 등록하면 다음과 같이 <component> 태그를 통해 동적으로 렌더링할 수 있다.
@@ -3932,12 +3931,14 @@ export default defineComponent({
 </script>
 ```
 
-위 코드에서 참조 컴포넌트 myComp는 옵션 API 방식으로 작성되었지만 SFC 컴포넌트를  임포트하고 전달하는 방법도 있다. 두 방식 모두 출력 결과는 같다.
+위 코드에서 참조 컴포넌트 myComp는 옵션 API 방식으로 작성되었지만 SFC 컴포넌트를 임포트하고 전달하는 방법도 있다. 두 방식 모두 출력 결과는 같다.
 
-<component> 태그 활용법은 무궁무진하다. 갤러리 컴포넌트를 예를 들자면, 각 갤러리 항목에 component를 적용해 Card 혹은 Row 컴포넌트를 선택적으로  교체하여 렌더링할 수 있다.
+<component> 태그 활용법은 무궁무진하다. 갤러리 컴포넌트를 예를 들자면, 각 갤러리 항목에 component를 적용해 Card 혹은 Row 컴포넌트를 선택적으로 교체하여 렌더링할 수 있다.
 
-그러나 Vue 컴포넌트를 전환하는 과정에서 현재 엘리먼트를  완전히 언마운팅하고 컴포넌트의 데이터 상태를 모두 지운다. 결국 이전 컴포넌트로 전환한다 해도 새로운 데이터 상태로 새로운 인스턴스가 만들어 지는 셈이다. 이러한 재생성의 단점을 보완하고, 향후 컴포넌트 전환 시 과거 엘리먼트의 상태를 보존하려면 keep-alive 컴포넌트를 사용해야 한다.
+그러나 Vue 컴포넌트를 전환하는 과정에서 현재 엘리먼트를 완전히 언마운팅하고 컴포넌트의 데이터 상태를 모두 지운다. 결국 이전 컴포넌트로 전환한다 해도 새로운 데이터 상태로 새로운 인스턴스가 만들어 지는 셈이다. 이러한 재생성의 단점을 보완하고, 향후 컴포넌트 전환 시 과거 엘리먼트의 상태를 보존하려면 keep-alive 컴포넌트를 사용해야 한다.
+
 ## 7.6 keep-alive로 컴포넌트 인스턴스를 활성 상태로 유지하기
+
 <keep-alive>는 Vue 내장 컴포넌트이며 비활성 모드에서 동적 엘리먼트를 감싸고 컴포넌트의 상태를 보존하는 역할을 한다.
 
 StepOne과 StepTwo라는 두 컴포넌트가 있다고 가정해보자. StepOne 컴포넌트에는 다음과 같이 문자열 input 필드가 있으며 로컬 데이터의 name 프로퍼티를 v-model로 양방향 바인딩하고 있다.
@@ -3994,7 +3995,7 @@ export default defineComponent({
     data() {
       return {
         activeComp: "StepOne"
-      }  
+      }
     },
 })
 </script>
@@ -4037,7 +4038,9 @@ keep-alive가 캐시로 유지할 인스턴스의 최대 개수는 다음과 같
 위 코드에서 `max=”2”` 설정은 keep-alive 인스턴스의 최대 개수를 2개로 정의한다. 캐시 인스턴스 수가 이를 넘기면 Vue는 가장 먼저 사용됐던 캐시 목록에서 제거하고 새로운 인스턴스를 추가한다.(Least recently used)
 
 # 250515 8.1 ~ 8.2
+
 ## 8.1 라우팅이란
+
 사용자는 웹을 탐색할 때 브라우저 주소창에 URL을 입력한다. URL은 웹 리소스를 나타내는 주소다. URL은 여러 의미와 요소를 담고 있지만 다음과 같은 큰 구획으로 나눌 수 있다.
 
 위치
@@ -4062,7 +4065,8 @@ https://mayashavin.com/blog?tag=vue&sortBy=asc#summary
 Vue는 프런트엔드 프레임워크로써 SPA 컴포넌트를 구축하는 틀을 제공하지만 라우팅 서비스는 별개의 문제다. 사용자에게 온전한 내비게이션 경험을 제공하려면 애플리케이션 라우팅 기능이 반드시 필요하다. SPA의 통상적 과제인 히스토리 관리, 북마크 등의 기능을 포함해 라우팅 서비스 전체를 설계하고 개발해야 한다.
 
 ## 8.2 Vue 라우터
-Vue 라우터는 Vue 애플리케이션의 공식 라우팅 서비스이며, 페이지 내비게이션 기능과 제어 메커니즘을 제공한다. Vue 라우터로 애플리케이션의 라우팅 시스템을 구성하면 컴포넌트와 페이지를 매핑하고 SPA 클라이언트 측면에서 원활한 사용자 경험을 전달할 수 있다. 
+
+Vue 라우터는 Vue 애플리케이션의 공식 라우팅 서비스이며, 페이지 내비게이션 기능과 제어 메커니즘을 제공한다. Vue 라우터로 애플리케이션의 라우팅 시스템을 구성하면 컴포넌트와 페이지를 매핑하고 SPA 클라이언트 측면에서 원활한 사용자 경험을 전달할 수 있다.
 
 - Vue 라우터 웹사이트에서 공식 문서 API 참고 사례등의 정보를 알 수 있다.
 
@@ -4085,13 +4089,13 @@ ContactView
 LoginView
 로그인 폼을 표시한다.
 
-| URL | 컴포넌트 | 라우트 경로 |
-| --- | --- | --- |
-| http://localhost:4000 | HomeView | / |
-| http://localhost:4000/about | AboutView | /about |
-| http://localhost:4000/pizzas | PizzasView | /pizzas |
-| http://localhost:4000/contact | Contact | /contact |
-| http://localhost:4000/login | LoginView | /login |
+| URL                           | 컴포넌트   | 라우트 경로 |
+| ----------------------------- | ---------- | ----------- |
+| http://localhost:4000         | HomeView   | /           |
+| http://localhost:4000/about   | AboutView  | /about      |
+| http://localhost:4000/pizzas  | PizzasView | /pizzas     |
+| http://localhost:4000/contact | Contact    | /contact    |
+| http://localhost:4000/login   | LoginView  | /login      |
 
 ### 8.2.2 라우트 정의
 
@@ -4137,15 +4141,15 @@ export default routes
 
 ```
 
-- 명명된 라우트 
-이번 장의 예제는 name 프로퍼티를 지닌 명명된 라우터를 사용한다. 코드 가독성을 높이고 관리하기 쉽게 유지하려면 라우트에 이름을 지정하는 것이 좋다.
+- 명명된 라우트
+  이번 장의 예제는 name 프로퍼티를 지닌 명명된 라우터를 사용한다. 코드 가독성을 높이고 관리하기 쉽게 유지하려면 라우트에 이름을 지정하는 것이 좋다.
 
 ### 8.2.3 라우터 인스턴스 생성
 
 라우터 인스턴스는 vue-router 패키지의 createRouter 메서드로 생성한다. 이 메서드의 인수는 RouterOptions 타입 객체이며 주요 프로퍼티는 다음과 같다.
 
 history
-해시 기반 또는 웹 기반 히스토리 모드를 설정하는 객체 웹 방식은 HTML5 히스토리 API로 URL을  읽고 새로고침 없이 페이지를 탐색할 수 있다.
+해시 기반 또는 웹 기반 히스토리 모드를 설정하는 객체 웹 방식은 HTML5 히스토리 API로 URL을 읽고 새로고침 없이 페이지를 탐색할 수 있다.
 
 rotues
 라우터 인스턴스에서 사용할 라우트 배열
@@ -4201,12 +4205,12 @@ export const router = createRouter({
 
 ```
 
-그러나 베이스 URL을 정적 문자열로 지정하는 것은 좋은 방법이 아니다. 베이스 URL 설정은 개발, 프로덕션 등다양한 환경과 무관한 격리된 상태로 유지하는 것이 최선이다. 이러한 취지에서 vite은 BASE_URL 프로퍼티가 포함된 import.meta.env라는 환경 객체를 제공한다. BASE_URL은 .env로 시작하는 전용 환경 파일에 추가하거나 Vite 서버를 실행할 때 명령줄에 지정할 수 있다. 
+그러나 베이스 URL을 정적 문자열로 지정하는 것은 좋은 방법이 아니다. 베이스 URL 설정은 개발, 프로덕션 등다양한 환경과 무관한 격리된 상태로 유지하는 것이 최선이다. 이러한 취지에서 vite은 BASE_URL 프로퍼티가 포함된 import.meta.env라는 환경 객체를 제공한다. BASE_URL은 .env로 시작하는 전용 환경 파일에 추가하거나 Vite 서버를 실행할 때 명령줄에 지정할 수 있다.
 
 ```jsx
 export const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL)
-  ,routes
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes,
 })
 ```
 
@@ -4238,11 +4242,65 @@ import {RouterView} from 'vue-router';
 RouterView도 Vue 컴포넌트이므로 props, 속성, 이벤트 리스너를 지정할 수 있으며 RouterView는 이들을 뷰로 전달한다. 다음은 RotuerView에 class를 전달하는 예시다.
 
 ```jsx
-
 <template>
-  <RouterView class="view"/>
+  <RouterView class="view" />
 </template>
-
 ```
 
 이렇게 전달된 class 속성은 렌더 컴포넌트의 최상위 컨테이너 엘리먼트에 지정되며 이를 통해 css 스타일을 제어할 수 있다.
+
+### 8.2.6 RouterLink 컴포넌트로 내비게이션 바 만들기
+
+Vue 라우터는 이터랙티브 내비게이션 앨리먼트를 생성할 수 있는 RouterLink 컴포넌트를 제공한다. 이 컴포넌트는 특정 라우터의 path 문자열을 to props로 지정할 수 있다. 다음 예제는 about 페이저로 이동하는 링크를 나타낸다.
+
+```jsx
+<router-link :to="{name:'about'}">About</router-link>
+```
+
+기본적으로 이 컴포넌트 href와 활성 링크 클래스를 담아 앵커 엘리먼트(a)를 렌더링한다. 활성 링크 클래스는 이전에 설명했던 router-link-active 또는 router-link-exact-active다. 기본 엘리먼트 대신 다른 엘리먼트로 렌더링하는 방법도 있다. 다음 예시는 불리언 속성인 custum과 v-slot 디렉티브를 적용해 button 엘리먼트를 렌더링한다.
+
+```jsx
+  <router-link :to="{name:'about'}" v-slot="{navigate}">
+    <button @click="natigate">About</button>
+  </router-link>
+  <RouterView class="view"/>
+```
+
+이 코드는 a엘리먼트가 아닌 button 엘리먼트를 렌더링하며 클릭 이벤트를 navigate 함수와 바인딩한다.
+
+- custom 속성
+  custom 속성을 사용할 때는 navigate 함수를 클릭 핸들러로 바인딩하거나, v-slot으로 href 값을 가져와 직접 링크를 걸어야 한다. 그렇지 않으면 링크가 제대로 작동하지 않는다. 이떄 router-link-active 등의 클래스명은 커스텀 엘리먼트에 적용되지 않다.
+
+```jsx
+<script setup lang="ts">
+// import {RouterView} from 'vue-router';
+</script>
+
+<template>
+<nav>
+  <router-link :to="{name:'home'}">home</router-link>
+  <router-link :to="{name:'about'}">About</router-link>
+  <router-link :to="{name:'pizzas'}">pizzas</router-link>
+  <router-link :to="{name:'contact'}">contact</router-link>
+  <router-link :to="{name:'login'}">login</router-link>
+</nav>
+  <!-- <RouterView class="view"/> -->
+</template>
+
+<style scoped>
+nav {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+}
+.router-link-active, .rotuer-link-exact-active{
+  text-decoration: underline;
+}
+
+</style>
+
+```
+
+App 컴포넌트에 NavBar를 추가하면 페이지상단에 네비게이션 바가 나타난다.
+
+# 250516 8.3

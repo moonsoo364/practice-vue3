@@ -1,13 +1,7 @@
+<script setup lang="ts"></script>
 <template>
-  <div class="about">
-    <h1>This is an Contact page</h1>
+  <div>
+    <h1>This is an Login page</h1>
   </div>
 </template>
-
-<style>
-
-</style>
-<script setup lang="ts">
-
-</script>
-
+<style></style>
