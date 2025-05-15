@@ -3,5 +3,5 @@
 </script>
 
 <template>
-  <div></div>
+  <div>THis is the Home view of the Pizza stores</div>
 </template>
