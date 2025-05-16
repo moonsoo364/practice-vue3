@@ -1,7 +1,10 @@
 export type Pizza = 
 {
-    id: number;
-    name: string;
+    id: string;
+    title: string;
+    price: string;
     description: string;
-    thumbnamil: string;
+    image: string;
+    quantity?: number;
+
 }

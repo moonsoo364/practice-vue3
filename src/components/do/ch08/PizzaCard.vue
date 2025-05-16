@@ -1,52 +1,46 @@
 <template>
-  <ul class="list-layout">
-    <li class="list-layout__item" v-for="item in items" :key="item.id">
-      <slot name="thumnail" :item="item"></slot>
-      <!-- <slot name="main" :item="item">
-        <div class="list-layout__item__name">{{ item.name }}</div>
-        <div class="list-layout__item__description">{{ item.description }}</div>
-      </slot> -->
-      <slot name="actions" :items="item"></slot>
-    </li>
-  </ul>
+ <article class="pizza-details-wrapper">
+    <img :src="pizza.image" :alt="pizza.title" height="200" width="300" />
+    <p>{{ pizza.description }}</p>
+    <div class="pizza--inventory">
+      <div class="pizza--inventory-stock">Stock: {{ pizza.quantity || 0 }}</div>
+      <div class="pizza--invetory-price">$ {{ pizza.price }}</div>
+    </div>
+ </article>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import type {Pizza} from '@/types/ch08/Pizza';
+import type {PropType} from 'vue';
 
-interface Item {
-  id: number
-  name: string
-  description: string
-  thumbnamil?: string
-}
-const subPath = 'https://res.cloudinary.com/mayashavin/image/upload/v1643005666/Demo/'
+const props = defineProps({
+  pizza:{
+    type: Object as PropType<Pizza>,
+    required: true,
+  }
+});
 
-export default defineComponent({
-  name: 'ListLayout',
-  data(): { items: Item[] } {
-    return {
-      items: [
-        {
-          id: 1,
-          name: 'Item 1',
-          description: 'This is item 1',
-          thumbnamil: subPath + 'supreme_pizza',
-        },
-        {
-          id: 2,
-          name: 'Item 2',
-          description: 'This is item 2',
-          thumbnamil: subPath + 'hawaiian_pizza',
-        },
-        {
-          id: 3,
-          name: 'Item 3',
-          description: 'This is item 3',
-          thumbnamil: subPath + 'pina_colada_pizza',
-        },
-      ],
-    }
-  },
-})
 </script>
+
+<style scoped>
+  .pizza--details-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    width: 300px;
+    border: 1px solid #ccc;
+    padding: 0 1rem;
+  }
+  img{
+    object-fit: cover;
+  }
+  .pizza--inventory{
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+</style>
