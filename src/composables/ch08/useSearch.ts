@@ -1,6 +1,6 @@
 import {computed, ref, type Ref} from 'vue';
 export type UseSearchProps = {
-    items: Ref<any[]>;
+    items: Ref<object[]>;
     filter?: string;
     defaultSearch?: string;
 };
