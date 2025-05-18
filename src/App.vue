@@ -7,7 +7,7 @@ import { RouterView } from 'vue-router'
     <router-link :to="{ name: 'home' }" class="link">home</router-link>
     <router-link :to="{ name: 'about' }" class="link">About</router-link>
     <router-link :to="{ name: 'pizzas' }" class="link">pizzas</router-link>
-    <router-link :to="{ name: 'pizzas', query: { id: 1 } }" class="link">Pizza 1</router-link>
+    <!-- <router-link :to="{ name: 'pizzas', query: { id: 1 } }" class="link">Pizza 1</router-link> -->
     <router-link :to="{ name: 'contact' }" class="link">contact</router-link>
     <router-link :to="{ name: 'login' }" class="link">login</router-link>
   </nav>

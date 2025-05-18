@@ -4303,4 +4303,70 @@ nav {
 
 App 컴포넌트에 NavBar를 추가하면 페이지상단에 네비게이션 바가 나타난다.
 
-# 250516 8.3
+### 250516 8.3
+
+라우트 사이에 데이터를 전달하려면 다음과 같이 to 라우터 객체에 query 필드를 추가한다.
+
+```jsx
+<router-link :to="{ name: 'pizzas', query: { id: 1 } }" class="link">Pizza 1</router-link>
+```
+
+query 필드는 경로에 전달하려면 쿼리 파라미터 정보가 담긴 객체다. Vue 라우터는 이 객체를 쿼리 문자열로 변환하고 다음과 같이 ? 문자를 붙여 완전한 href 경로를 만든다.
+
+```jsx
+<a
+  data-v-7a7a37b1=""
+  href="/pizzas?id=1"
+  class="router-link-active router-link-exact-active link"
+  aria-current="page"
+>
+  Pizza 1
+</a>
+```
+
+이렇게 전달된 쿼리 파라미터는 라우트 컴포넌트에서 useRoute() 함수로 접근할 수 있다. 다음은 PizzasView에서 쿼리 파라미터로 접근하는 예시이다.
+
+```jsx
+<template>
+  <div>
+    <h1>This is an Pizzas page</h1>
+    <p v-if="pizzaId">Pizza Id: {{ pizzaId }}</p>
+  </div>
+</template>
+<script setup lang="ts">
+import { useRoute } from 'vue-router'
+const route = useRoute()
+const pizzaId = route.query?.id
+</script>
+
+```
+
+브라우저에서 http:localhost:port/pizzas?id=1 URL에 접근하면 다음 렌더링 화면이 나온다.
+
+```jsx
+This is an Pizzas page
+Pizza Id: 1
+```
+
+PizzasView에 검색기능을 추가해보자.
+
+```jsx
+<template>
+  <div>
+    <h1>This is an Pizzas page</h1>
+    <p v-if="pizzaId">Pizza Id: {{ pizzaId }}</p>
+    <ul>
+      <li v-for="pizza in pizzas" :key="pizza.id">
+        <PizzaCard :pizza="pizza"/>
+      </li>
+    </ul>
+  </div>
+</template>
+<script setup lang="ts">
+import { useRoute } from 'vue-router'
+import PizzaCard from '@/components/do/ch08/PizzaCard.vue'
+const route = useRoute()
+const pizzaId = route.query?.id
+</script>
+
+```
