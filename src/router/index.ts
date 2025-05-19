@@ -7,6 +7,7 @@ import ContactView from '@/views/ContactView.vue'
 import LoginView from '@/views/LoginView.vue'
 import ContactFormView from '@/views/ContactFormView.vue'
 import ContactFaqView from '@/views/ContactFaqView.vue'
+import ErrorView from '@/views/ErrorView.vue'
 
 const routes:RouteRecordRaw[] =[
   {
@@ -65,6 +66,11 @@ const routes:RouteRecordRaw[] =[
     name: 'login',
     component: LoginView
   },
+  {
+    path: '/:pathMatch(.*)*',
+    name:'error',
+    component: ErrorView,
+  }
 ]
 
 
