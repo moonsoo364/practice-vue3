@@ -22,6 +22,7 @@ import { watch, type Ref } from 'vue'
 const props = defineProps({
   searchTerm: {
     type: String,
+    required: false,
     default: '',
   },
 })
@@ -39,8 +40,8 @@ type PizzaSearch = {
 
 const { search, searchResults }: PizzaSearch = useSearch({
   items: pizzas,
-  //defaultSearch: props.searchTerm,
-  defaultSearch: route.query?.search as string,
+  defaultSearch: props.searchTerm,
+  //defaultSearch: route.query?.search as string,
 })
 
 watch(search, (value, preValue) => {

@@ -4370,3 +4370,136 @@ const pizzaId = route.query?.id
 </script>
 
 ```
+여기에 피자 검색 기능을 추가해 보자. 사용자 search 쿼리 파라미터로 피자 이름을 검색하면 피자 목록이 검색 결과로 추려져야 한다. 아래 useSearch 훅에 route.query.search를 전달하면 피자를 검색한 뒤 반응형 search 값과 파자 검색 목록이 반환된다.
+
+```jsx
+import {computed, ref, type Ref} from 'vue';
+export type UseSearchProps = {
+    items: Ref<object[]>;
+    filter?: string;
+    defaultSearch?: string;
+};
+
+export const useSearch =({
+    items,
+    filter = "title",
+    defaultSearch = "",
+} : UseSearchProps ) =>{
+    const search = ref(defaultSearch);
+    const searchResults = computed(() =>{
+        const searchTerm = search.value.toLowerCase();
+        if (searchTerm === ""){
+            return items.value;
+        }
+        return items.value.filter((item)=> {
+            const itemValue = item[filter]?.toLowerCase()
+                return itemValue.includes(searchTerm);
+        });
+    });
+    return {search,searchResults};
+}
+```
+
+이제 `?search=hawaii`로 이동하면 Hawaii라는 피자만 목록에 표시된다.
+
+```jsx
+<template>
+  <div>
+    <search class="pizzas-view--container"></search>
+    <h1>This is an Pizzas page</h1>
+    <p v-if="pizzaId">Pizza ID: {{ pizzaId }}</p>
+    <ul>
+      <li v-for="pizza in searchResults" :key="pizza.id">
+        <PizzaCard :pizza="pizza" />
+      </li>
+    </ul>
+  </div>
+</template>
+<script setup lang="ts">
+import { useRouter, useRoute } from 'vue-router'
+import { usePizzas } from '@/composables/ch08/usePizzas'
+import PizzaCard from '@/components/do/ch08/PizzaCard.vue'
+import { useSearch } from '@/composables/ch08/useSearch'
+import type { Pizza } from '@/types/ch08/Pizza'
+import { watch, type Ref } from 'vue'
+
+const props = defineProps({
+  searchTerm: {
+    type: String,
+    default: '',
+  },
+})
+
+const route = useRoute()
+const pizzaId = route.query?.id
+const router = useRouter()
+
+const { pizzas } = usePizzas()
+
+type PizzaSearch = {
+  search: Ref<string>
+  searchResults: Ref<Pizza[]>
+}
+
+const { search, searchResults }: PizzaSearch = useSearch({
+  items: pizzas,
+  defaultSearch: route.query?.search as string,
+})
+
+watch(search, (value, preValue) => {
+  if (value === preValue) return
+  router.replace({ query: { search: value } })
+})
+</script>
+```
+
+사용자가 페이지에서 피자를 검색하고 검색어를 파라미터와 동기화시킬 수 있을 까? search 변수를 input과 양방향 바인딩하고 watch 함수로 search 의 변화를 감지한다.
+
+```jsx
+    <input type="text" v-model="search" placeholder="search for a pizza" />
+```
+
+```jsx
+watch(search, (value, preValue) => {
+  if (value === preValue) return
+  router.replace({ query: { search: value } })
+})
+```
+# 250519 8.4 ~
+## 8.5 내비게이션 가드의 이해
+네비게이션 가드는 내비게이션 흐름을 원할하게 제어하기 위한 기능이다. 또한 라우트가 변경됐을 때 또는 변경 직전에 부가 작업을 처리하는 용도로 활용되기도 한다. 내비 게이션 가드는 전역 컴포넌트 수준, 라우트 수준 등의 세 가지 유형으로 구분된다.
+
+### 8.5.1 전역 내비게이션 가드
+
+Vue 라우터는 다음과 같은 전역 수준 내비게이션 가드를 모든 라우터 인스턴스에 노출한다.
+
+router.beforeEach
+
+모든 내비게이션 작동 이전에 호출된다.
+
+router.beforeResolve
+
+모든 비동기 컴포넌트와 컴포넌트 내부 가드가 해결된 이후 내비게이션이 완료되기 전에 호출된다.
+
+router.afterEach
+
+내비게이션 완료 이후, DOM 업데이트 전에 호출된다.
+
+전역 가드는 특정 라우트로 이동하기에 앞서 유효성을 검사하기 좋은 곳이다. 예를 들면 /pizzas 라우트로 이동하기 전에 router.beforeEach에서 사용자 인증 여부를 확인하고 인증되지 않았을 경우 다음과 같이 /login 페이지로 이동시킬 수 있다.
+
+```java
+const user = {
+	isAuthenticated: false,
+}
+router.beforeEach((to, from, next) => {
+ if ( to.name === 'pizzas' && !user.isAuthenticated){
+	 next({name: 'login'});
+ }else{
+	 next();
+ }
+}
+```
+
+이 코드에서 to는 이동 대상 라우트 객체, from은 현재 라우트 객체다. next 함수를 마지막에 호출하면 훅/가드가 완료된다. 원래 목적지로 계속 이동하려면 인수 없이 next를 실행하고 다른 경로로 이동하려면 새로운 라우트 next()로 호출해야 한다. 그 외의 경우에는 Vue라우터가 내비게이션 흐름을 중단한다.
+
+- router.beforeResolve 가드에서 내비게이션 유효성을 검사할 수 있다. 그러나 rotuer.beforeEach와 달리 router.beforeResolve는 컴포넌트 내부 가드가 모두 해결된 이후 트리거된다. 내비게이션 유효성 검사에 따라 비동기 컴포넌트 로딩 여부를 결정하고자 한다면, 후자는 효용 가치가 떨어진다. 이미 모든 컴포넌트가 정착한 이후이기 때문이다.

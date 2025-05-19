@@ -10,7 +10,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
 import type { Pizza } from '@/types/ch08/Pizza'
 import type { PropType } from 'vue'
 
