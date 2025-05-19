@@ -4503,3 +4503,152 @@ router.beforeEach((to, from, next) => {
 이 코드에서 to는 이동 대상 라우트 객체, from은 현재 라우트 객체다. next 함수를 마지막에 호출하면 훅/가드가 완료된다. 원래 목적지로 계속 이동하려면 인수 없이 next를 실행하고 다른 경로로 이동하려면 새로운 라우트 next()로 호출해야 한다. 그 외의 경우에는 Vue라우터가 내비게이션 흐름을 중단한다.
 
 - router.beforeResolve 가드에서 내비게이션 유효성을 검사할 수 있다. 그러나 rotuer.beforeEach와 달리 router.beforeResolve는 컴포넌트 내부 가드가 모두 해결된 이후 트리거된다. 내비게이션 유효성 검사에 따라 비동기 컴포넌트 로딩 여부를 결정하고자 한다면, 후자는 효용 가치가 떨어진다. 이미 모든 컴포넌트가 정착한 이후이기 때문이다.
+
+그렇다면 rotuer.afterEach는 어떤 역할을 할까? 이 훅은 페이지 데이터 캐시 저장, 페이지 분석 정보 추적등에 사용한다. 다음은 로그인 페이지를 거친 사용자를 인증하는 역할을 한다. 
+
+```jsx
+router.afterEach(to,from) ⇒{
+	if(to.name === 'login'){
+		user.isAuthenticated = true;
+	}
+}
+```
+
+전역 가드는 애플리케이션의 전반적인 리다이랙션과 각종 부가 작업을 처리할 때 유리하다. 그러나 가끔은 특정 라우트의 부가 작업만 처리해야 할 때가 있다. 이 때는 라우트 수준 가드를 사용하는 것이 좋다.
+
+### 8.5.2 라우터 수준 내비게이션 가드
+
+beforeEnter 가드에 콜백을 정의하면 모든 라우트에 적용된다. Vue 라우터는 한 경로에서 다른 경로로 진입할 때 이 콜백을 실행한다. 다음 코드는 /pizzas에서 props 필드에 함수를 지정하는 대신 내비게이션 가드로 검색 쿼리를 prop에 매핑하는 예시다. 라우트 진입 이전 to.query.search값을 to.params.searchTerm 필드로 직접 설정한다.
+
+```jsx
+  {
+    path: '/pizzas',
+    name: 'pizzas',
+    component: PizzasView,
+    props: (route: RouteLocationNormalizedLoaded) => ({
+      searchTerm: route.query?.search || "",
+    }),
+    beforeEnter: async ( to, form, next) =>{
+      to.params.searchTerm = (to.query.search || "") as string;
+      console.log(to.params.searchTerm);
+      
+      next();
+    },
+  },
+```
+
+beforeEnter 가드 내부에서 to.query.searchTerm을 직접 수정할 수 있다. 그러나 이러한 변경 사항은 브라우저 주소창의 URL 경로에 반영되지 않는다. URL 경로를 업데이트하려면 리디렉션 경로의 쿼리 파라미터로 라우트 객체를 만들어 next 함수에 전달하면 된다.
+
+- beforeEnter에 콜백 배열 전달
+beforeEnter에 콜백 배열을 전달하면 Vue라우터가 순차적으로 트리거한다. 특정 라우트에 진입하기 전에 해당 경로의 여러 부가 작업을처리하기 좋은 기법이다.
+
+다른 전역 가드와 마찬가지로 beforeEnter 가드도 특정 라우트의 인증을 처리하기 좋은 곳이다. 또한 라우트 파라미터를 뷰 컴포넌트에 전달하기 전에 가공하기 좋은 곳이기도 하다. 다음으로 컴포넌트 수준 가드에서 특정 뷰의 부가 작업을 처리하는 방법을 설명한다.
+
+### 8.5.3 컴포넌트 수준 라우터 가드
+
+Vue 3.x부터 vue 라우터는 컴포넌트 수준 가드를 제공하면 onBeforeRouteLeave 및 onBeforeRouteUpdate 등의 가드로 라우트 전환 및 업데이트 흐름을 제어할 수 있다. Vue 라우터는 사용자가 현재 경로 뷰를 벗어날 때 onBeforeRouteLeave를 동일한 경로에서 파라미터가 바뀔 때는 onBeforeRouteUpdate를 호출한다. 다음 코드에서 onBeforeRouteLeave 가드는 사용자가 Contract 페이지에서 나갈 것인지 확인하는 메시지를 표시한다.
+
+```jsx
+<template>
+  <div>
+    <h1>This is an Contact page</h1>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { onBeforeRouteLeave } from 'vue-router';
+  onBeforeRouteLeave((to, from, next)=>{
+    const answer = window.confirm("Are you sure you want to leave?")
+    next(!!answer);
+  })
+</script>
+```
+
+- 옵션 API로 컴포넌트를 만들 경우 옵션 객체에 beforeRouteLeave 및 beforeRouteUpdate 가드를 구성하면 동일하게 작동한다. beforeRouteEnter 혹은 Vue가 뷰 컴포넌트를 초기화하기 전에 라우터가 트리거한다. 이 가드는 setup() 훅과 입장이 비슷하다. 즉 Vue 라우터 API 쪽에는 대응하는 컴포저블이 없다.
+
+아래는 라우팅 시스템에 존재하는 내비게이션 가드를 나타낸다.
+
+beforeEach → beforeRouteUpdate → beforeEnter → beforeRouteEnter → beforeResolve → afterEnter → beforeRouteLeave
+
+견고한 라우팅 시스템을 구축하려면 내비게이션 흐름과 가드 실행 순서를 반드시 이해하고 있어야 한다.
+
+## 8.6 중첩 라우트
+지금까지 구축한 애플리케이션 라우팅 시스템은 기초 단계에 불과하다. 현실에서 대부분의 라우팅 시스템은 이보다 더 복잡하다. 가령 Contract 페이지는 다음과 같이 자주 묻는 질문(FAQ)와 Form 페이지를 하위에 두는 경구가 많다.
+
+```jsx
+/contact/faq
+/contact/form
+```
+
+/contact페이지의 기본 UI는 ContactView 페이지다. 사용자는 이 페이지에서 링크를 클릭해 Form 페이지로 이동해야 한다. 이 경우 다음과 같이 route 설정 객체에 children 필드를 추가하면 /contact 페이지의 중첩 경로를 생성할 수 있다.
+
+먼저 ContactFaqView와 ContactFormView 컴포넌트를 생성하고, 라우터가 이를 렌더링하도록 다음과 같이 /contact 라우트를 수정한다.
+
+```jsx
+{
+    path: '/contact',
+    name: 'contact',
+    component: ContactView,
+    children:[
+      {
+        path:'',
+        name: 'contact-faq',
+        component: ContactFaqView
+      },
+      {
+        path:'',
+        name: 'contact-form',
+        component: ContactFormView
+      },
+    ]
+  },
+```
+
+중첩 라우트를 렌더링하려면 ContactView 내부에 RouterView 자리가 있어야한다. 다음과 같이 ContactView에 router-view를 추가해보자.
+
+```jsx
+<template>
+  <div class="contact-view--container">
+    <h1>This is the contact page</h1>
+    <nav>
+      <router-link to="/contact/faq">FAQs</router-link>
+      <router-link to="/contact/form">Contact Us</router-link>
+    </nav>
+    <router-view />
+  </div>
+</template>
+<script setup lang="ts">
+```
+
+이제 컴포넌트를 /contact/faq로 이동하면 ContactFaqView를 /contact/form으로 이동하면 ContactFormView를 렌더링한다.이런 방식으로 중첩된 UI 레이아웃을 간편하게 생성할 수 있다.
+
+지금까지는 부모 레이아웃 내부에 중첩 라우트를 생성하는 방법을 살펴보았다. 그러나 간혹 부모 레이아웃 없이 중첩라우트를 바로 렌더링해야 할 경우가 있다. 이때는 부모 라우트의 기본 경로를 자식 라우트 객체로 선언해야 한다. 예를 들어 다음 예시는 부모 라우트였던 /contact의 name과 component를 중첩 라우트로 옮기고 경로 패턴에 빈 값을 지정한다.
+
+```jsx
+  {
+    path: "/contact",
+    // name: "contact",
+    // component: ContactView,
+    children: [
+      {
+        path: "faq",
+        name: "contact-faq",
+        component: ContactFaqView,
+      },
+      {
+        path: "form",
+        name: "contact-form",
+        component: ContactFormView,
+      },
+      {
+        path: "",
+        name: "contact",
+        component: ContactView,
+      }
+    ],
+  },
+```
+
+이렇게 했을 때 /contact/faq로 이동 시 ContactView의 콘텐츠 없이 contactFaqView 컴포넌트만 렌더링한다.
+
+중첩라우트는 실제 애플리케이션에서 널리 사용된다. 사실 이번장에서 정의한 rotues 배열은 이미 애플리케이션의 라우터 인스턴스의 중첩 라우트다. 중첩 라우트를 잘쓰면 라우팅 구조를 체계적으로 정리하고 동적 라우트를 만들기도 편하다. 이어서 동적 라우트에 대해 설명한다.

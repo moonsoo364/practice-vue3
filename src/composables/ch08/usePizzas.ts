@@ -34,13 +34,14 @@ export function usePizzas(): {pizzas: Ref<Pizza[]>}{
             
             },
             {
-                id: '4',
-                title: 'Hawaiian Pizza',
-                price: '11.00',
-                description: 'A delicious combination of ham, pineapple, and pineapple.',
-                image: URL+'hawaian_pizza.jpg',
+                id: "4",
+                title: "Hawaiian Pizza",
+                price: "11.00",
+                description:
+                "A delicious combination of ham, pineapple, and pineapple.",
                 quantity: 5,
-            
+                image:
+                "https://res.cloudinary.com/mayashavin/image/upload/v1643005556/Demo/hawaiian_pizza.jpg",
             },
             {
                 id: '5',

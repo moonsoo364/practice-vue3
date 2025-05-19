@@ -1,6 +1,6 @@
 <template>
   <div>
-    <search class="pizzas-view--container"></search>
+    <div class="pizzas-view--container"></div>
     <input type="text" v-model="search" placeholder="search for a pizza" />
     <h1>This is an Pizzas page</h1>
     <p v-if="pizzaId">Pizza ID: {{ pizzaId }}</p>
@@ -38,7 +38,7 @@ type PizzaSearch = {
   searchResults: Ref<Pizza[]>
 }
 
-const { search, searchResults }: PizzaSearch = useSearch({
+const { search, searchResults }: PizzaSearch = useSearch<Pizza>({
   items: pizzas,
   defaultSearch: props.searchTerm,
   //defaultSearch: route.query?.search as string,
