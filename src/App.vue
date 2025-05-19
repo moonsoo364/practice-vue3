@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import RouterComponent from '@/components/do/ch08/8_8/RotuerComponent.vue'
 </script>
 
 <template>
+  
   <nav>
     <router-link :to="{ name: 'home' }" class="link">home</router-link>
     <router-link :to="{ name: 'about' }" class="link">About</router-link>
@@ -11,6 +13,7 @@ import { RouterView } from 'vue-router'
     <router-link :to="{ name: 'contact' }" class="link">contact</router-link>
     <router-link :to="{ name: 'login' }" class="link">login</router-link>
   </nav>
+  <RouterComponent></RouterComponent>
   <RouterView class="view" />
 </template>
 

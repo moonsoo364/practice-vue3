@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import AboutView from '@/views/AboutView.vue'
-import PizzasView from '@/views/PizzasView.vue'
+import PizzasView from '@/views/PizzaView.vue'
 import ContactView from '@/views/ContactView.vue'
 import LoginView from '@/views/LoginView.vue'
 

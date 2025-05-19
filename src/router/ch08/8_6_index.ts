@@ -1,8 +1,7 @@
-import { createRouter, createWebHistory, type RouteRecordRaw, type RouteLocationNormalizedLoaded } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw, type RouteLocationNormalizedLoaded, onBeforeRouteLeave } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import AboutView from '@/views/AboutView.vue'
-import PizzasView from '@/views/PizzasView.vue'
-import PizzaView from '@/views/PizzaView.vue'
+import PizzasView from '@/views/PizzaView.vue'
 import ContactView from '@/views/ContactView.vue'
 import LoginView from '@/views/LoginView.vue'
 import ContactFormView from '@/views/ContactFormView.vue'
@@ -19,24 +18,19 @@ const routes:RouteRecordRaw[] =[
     name: 'about',
     component: AboutView
   },
- {
-    path: "/pizzas",
+  {
+    path: '/pizzas',
+    name: 'pizzas',
+    component: PizzasView,
     props: (route: RouteLocationNormalizedLoaded) => ({
       searchTerm: route.query?.search || "",
     }),
-    children: [
-      {
-        path: ":id",
-        name: "pizza",
-        component: PizzaView,
-        props: true,
-      },
-      {
-        path: "",
-        name: "pizzas",
-        component: PizzasView,
-      },
-    ],
+    beforeEnter: async ( to, form, next) =>{
+      to.params.searchTerm = (to.query.search || "") as string;
+      console.log(to.params.searchTerm);
+      
+      next();
+    },
   },
   {
     path: "/contact",
