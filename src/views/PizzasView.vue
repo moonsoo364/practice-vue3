@@ -1,15 +1,12 @@
 <template>
-  <div>
-    <div class="pizzas-view--container"></div>
-    <input type="text" v-model="search" placeholder="search for a pizza" />
-    <h1>This is an Pizzas page</h1>
-    <p v-if="pizzaId">Pizza ID: {{ pizzaId }}</p>
-    <ul>
-      <li v-for="pizza in searchResults" :key="pizza.id">
-        <PizzaCard :pizza="pizza" />
-      </li>
-    </ul>
-  </div>
+    <div class="pizzas-view--container">
+      <h1>Pizzas</h1>
+      <ul>
+        <li v-for="pizza in searchResults" :key="pizza.id">
+          <PizzaCard :pizza="pizza" />
+        </li>
+      </ul>
+    </div>
 </template>
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
