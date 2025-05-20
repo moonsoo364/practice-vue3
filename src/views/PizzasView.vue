@@ -1,26 +1,23 @@
 <template>
-    <div class="pizzas-view--container">
-      <h1>Pizzas</h1>
-      <ul>
-        <li v-for="pizza in searchResults" :key="pizza.id">
-          <PizzaCard :pizza="pizza" />
-        </li>
-      </ul>
-    </div>
+  <div class="pizzas-view--container">
+    <h1>Pizzas</h1>
+    <ul>
+      <li v-for="pizza in searchResults" :key="pizza.id">
+        <PizzaCard :pizza="pizza" />
+      </li>
+    </ul>
+  </div>
 </template>
 <script setup lang="ts">
-import { useRouter, useRoute } from 'vue-router'
-import { usePizzas } from '@/composables/ch08/usePizzas'
+import { useRouter } from 'vue-router'
 import PizzaCard from '@/components/do/ch08/PizzaCard.vue'
 import { useSearch } from '@/composables/ch08/useSearch'
 import type { Pizza } from '@/types/ch08/Pizza'
-import { watch, type Ref } from 'vue'
+import { watch, onBeforeMount, type Ref } from 'vue'
+import { usePizzasStore } from '@/stores/pizzas'
+import { storeToRefs } from 'pinia'
 
 const props = defineProps({
-  id:{//8-7
-    type: String,
-    required: true
-  },
   searchTerm: {
     type: String,
     required: false,
@@ -28,26 +25,29 @@ const props = defineProps({
   },
 })
 
-const route = useRoute()
-const pizzaId = route.query?.id
 const router = useRouter()
 
-const { pizzas } = usePizzas()
+const pizzasStore = usePizzasStore()
 
 type PizzaSearch = {
   search: Ref<string>
   searchResults: Ref<Pizza[]>
 }
 
-const { search, searchResults }: PizzaSearch = useSearch<Pizza>({
+const { pizzas } = storeToRefs(pizzasStore)
+
+const { search, searchResults }: PizzaSearch = useSearch({
   items: pizzas,
   defaultSearch: props.searchTerm,
-  //defaultSearch: route.query?.search as string,
 })
 
-watch(search, (value, preValue) => {
-  if (value === preValue) return
+watch(search, (value, prevValue) => {
+  if (value === prevValue) return
   router.replace({ query: { search: value } })
+})
+
+onBeforeMount(() => {
+  pizzasStore.fetchPizzas()
 })
 </script>
 <style scoped>
