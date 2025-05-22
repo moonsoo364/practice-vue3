@@ -1,20 +1,22 @@
 <template>
   <div class="pizzas-view--container">
     <h1>Pizzas</h1>
+    <input type="text" v-model="search" placeholder="search for a pizza" />
     <ul>
-      <li v-for="pizza in searchResults" :key="pizza.id">
-        <PizzaCard :pizza="pizza" />
-      </li>
+        <li v-for="pizza in searchResults" :key="pizza.id">
+          <PizzaCard :pizza="pizza" />
+        </li>
     </ul>
   </div>
 </template>
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import PizzaCard from '@/components/do/ch08/PizzaCard.vue'
-import { useSearch } from '@/composables/ch08/useSearch'
+
 import type { Pizza } from '@/types/ch08/Pizza'
 import { watch, onBeforeMount, type Ref } from 'vue'
 import { usePizzasStore } from '@/stores/pizzas'
+import { useSearch } from '@/composables/ch09/useSearch'
 import { storeToRefs } from 'pinia'
 
 const props = defineProps({
