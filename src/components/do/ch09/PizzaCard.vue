@@ -5,19 +5,32 @@
     <div class="pizza--inventory">
       <div class="pizza--inventory-stock">Stock: {{ pizza.quantity || 0 }}</div>
       <div class="pizza--inventory-price">$ {{ pizza.price }}</div>
+      <span v-if="isInCart">In cart</span>
     </div>
+    <button class="pizza--add" @click="addToCart">Add to cart</button>
   </article>
 </template>
 
 <script setup lang="ts">
+import { useCartStore } from '@/stores/ch09/cart'
 import type { Pizza } from '@/types/ch08/Pizza'
 import type { PropType } from 'vue'
+import {computed} from 'vue';
 
 const props = defineProps({
   pizza: {
     type: Object as PropType<Pizza>,
     required: true,
   },
+});
+
+const cart = useCartStore()
+const addToCart= () =>{
+  cart.add({id: props.pizza.id, quantity: 1})
+};
+
+const isInCart = computed(():boolean =>{
+  return !!cart.items.find((item) => item.id == props.pizza.id);
 })
 </script>
 
@@ -43,9 +56,5 @@ img {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-}
-.pizza--add {
-  margin-bottom: 5px;
-  cursor: pointer;
 }
 </style>

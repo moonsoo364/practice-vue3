@@ -11,7 +11,7 @@
 </template>
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import PizzaCard from '@/components/do/ch08/PizzaCard.vue'
+import PizzaCard from '@/components/do/ch09/PizzaCard.vue'
 
 import type { Pizza } from '@/types/ch08/Pizza'
 import { watch, onBeforeMount, type Ref } from 'vue'

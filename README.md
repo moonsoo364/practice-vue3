@@ -4652,3 +4652,335 @@ beforeEach → beforeRouteUpdate → beforeEnter → beforeRouteEnter → before
 이렇게 했을 때 /contact/faq로 이동 시 ContactView의 콘텐츠 없이 contactFaqView 컴포넌트만 렌더링한다.
 
 중첩라우트는 실제 애플리케이션에서 널리 사용된다. 사실 이번장에서 정의한 rotues 배열은 이미 애플리케이션의 라우터 인스턴스의 중첩 라우트다. 중첩 라우트를 잘쓰면 라우팅 구조를 체계적으로 정리하고 동적 라우트를 만들기도 편하다. 이어서 동적 라우트에 대해 설명한다.
+# 250521 ~ 250522 9.1 ~
+
+## 9.1 Vue의 상태 관리
+데이터는 애플리케이션에 생명을 불어넣고 컴포넌트 사이의 관계를 형성한다. 이전 장에서 구축했던 피자 하우스 예시는 피자 목록과 상품 정보 카드를 갤러리로 보여줄 뿐이었다. 사용자가 갤러리 컴포넌트에서 상품을 골라 장바구니에 담는 기능을 추가하려면 그에 맞는 데이터 관리 기능이 필요하다. 상품을 장바구니 데이터에 담고 제품의 재고 데이터를 업데이틓나느 동시에 이를 컴포넌트로 표현해야 한다.
+
+피자 하우스 애플리케이션의 메인뷰는 헤더 컴포넌트와 피자 카드 갤러리로 구성된다. 장바구니 항목 개수를 헤더에 표시하고, 피자 카드 목록 갤러리에서 각 카드에 장바구니 버튼을 추가해보자. 아래는 메인 뷰의 컴포넌트 계층 구조를 나타낸다.
+
+```jsx
+App →Header , PizaasView
+```
+
+사용자가 장바구니에 피자를 추가하면 헤더의 장바구니 항목 개수가 업데이트되어야 한다. App은 cart 데이터를 관리하며 헤더에 props로 전달하고 갤러리는 updateCart 이벤트로 App과 통신하여 cart를 업데이트한다.
+
+소형 애플리케이션은 이 방식이 적당하다. 그러나 PizzasView에 PizzasGallery라는 하위 컴포넌트를 두고 각 피자의 PizzaCard 컴포넌트를 PizzaGallery가 렌더링한다고 가정해보자. 이렇듯 새로운 상, 하위 계층이 생겼을 때 갤러리와 헤더 사이의 데이터는 이벤트를 통해 전파된다.
+
+이런식으로 컴포넌트와 레이어가 늘어나면 불필요한 props와 이벤특 ㅏ추가되고 전체적인 복잡도가 높아진다. 따라서 애플리케이션이 성장할 수록 확장성은 저하되며 점점 관리하기가 어려워진다.
+
+이런 오버헤드 없이 애플리케이션의 상태 흐름을 관리하려면 데이터를 저장하고 관리할 중앙 집중식 전역 상태 관리 시스템이 필요하다. 이 시스템은 데이터의 상태를 관리하며 컴포넌트마다 적재적소에 데이터를 제공하는 역할을 한다.
+
+## 9.2 피니아
+
+피니아는 Vuex와 컴포지션 API에서 영감을 받아 제작되었다. 현재 Vue의 공식 상태 관리 라이브러리는 피니아지만 그 외에 Vuex, Mobx등의 자바스크립트 라이브러리를 자유롭게 사용할 수 있다. 피니아는 Vuex의 상태 저장 패턴을 따르지만 더욱 유연하고 쉽게 확장할 수 있도록 개선되었다.
+
+피니아는 애플리케이션의 모든 집합을 하나의 시스템에 담지 않는다. 그 대신 여러 상태 모듈 또는 저장소로 데이터를 나누어 관리한다. 이러한 데이터는 컴포지션 API로 제작된 커스텀 컴포저블을 통해 접근할 수 있다. Vite로 Vue 프로젝트를 생성하면 초기 설정에 피니아를 상태 관리 라이브러리로 선택할 수 있다. Vite은 프로젝트 생성 시 피니아를 설치하고 src/stores/couter.ts 파일에서 couter라는 예제 저장소를 useCouterStore로 노출한다.
+
+다음과 같이 피니아 인스턴스를 생성하고 등록할 수 있다.
+
+```jsx
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+
+import App from './App.vue'
+import {router} from './router'
+
+const app = createApp(App)
+app.use(createPinia())
+
+app.use(router)
+app.mount("#app")
+
+```
+
+## 9.3 저장소 생성
+
+피니아는 Vuex의 저장소 패턴을 따르므로 다음과 같은 기본 프로퍼티로 구성된다.
+
+상태(state)
+컴포지션 API의 ref() 또는 reative() 메서드로 생성한 반응형 데이터
+
+게터(getter)
+computed() 메서드로 생성한 읽기 전용 프로퍼티 모음
+
+액션(action)
+저장소의 상태를 업데이트하거나 커스텀 로직으로 데이터를 처리하는 메서드 모음
+
+피니아 저장소는 defineStore 함수로 생성한다. 함수의 첫 번째 인수는 저장수 이름이며 두번째는 프로퍼티와 메서드 모음이다. 후자는 다른 컴포넌트에서 사용하거나 호출할 수 있다.
+
+```tsx
+import { defineStore } from "pinia";
+
+export const useStore = defineStore('storeName', ()=>{
+    return{
+        state: () =>({
+            myData:{}
+        }),
+        getters:{
+            computedData: () =>{}
+        },
+        actions:{
+            myAction(){}
+        }
+    }
+})
+```
+
+```
+import { defineStore } from "pinia";
+import {reactive, computed} from 'vue'
+
+export const useStore = defineStore('storeName', ()=>{
+    const myData = reactive({ value: 0 })
+    const computedData = computed(()=> myData.value )
+    const myAction = () =>{}
+
+    return {
+        myData,
+        computedData,
+        myAction
+    }
+})
+
+```
+
+아래는 PizzasView 컴포넌트를 저장소 방식으로 고친 코드다. pizzas와 fetchPizzas 프로퍼티로 API에서 피자 목록을 가져와 화면에 표시한다.
+
+```jsx
+<template>
+    <div class="pizzas-view--container">
+      <h1>Pizzas</h1>
+      <ul>
+        <li v-for="pizza in searchResults" :key="pizza.id">
+          <PizzaCard :pizza="pizza" />
+        </li>
+      </ul>
+    </div>
+</template>
+<script setup lang="ts">
+import { useRouter, useRoute } from 'vue-router'
+import { usePizzas } from '@/composables/ch08/usePizzas'
+import PizzaCard from '@/components/do/ch08/PizzaCard.vue'
+import { useSearch } from '@/composables/ch08/useSearch'
+import type { Pizza } from '@/types/ch08/Pizza'
+import { watch, type Ref } from 'vue'
+
+const props = defineProps({
+  id:{//8-7
+    type: String,
+    required: true
+  },
+  searchTerm: {
+    type: String,
+    required: false,
+    default: '',
+  },
+})
+
+const route = useRoute()
+const pizzaId = route.query?.id
+const router = useRouter()
+
+const { pizzas } = usePizzas()
+
+type PizzaSearch = {
+  search: Ref<string>
+  searchResults: Ref<Pizza[]>
+}
+
+const { search, searchResults }: PizzaSearch = useSearch<Pizza>({
+  items: pizzas,
+  defaultSearch: props.searchTerm,
+  //defaultSearch: route.query?.search as string,
+})
+
+watch(search, (value, preValue) => {
+  if (value === preValue) return
+  router.replace({ query: { search: value } })
+})
+</script>
+```
+
+위 코드에서 useSearch() 컴포저블로 구현했던 검색 기능은 그대로 가져올 수 없다. pizzasStore.pizzas를 useSearch() 컴포저블에 items로 직접 전달하면 반응성이 사라진다. 따라서 pizzasStore.fetchPizzas()가 비동기 요청을 해결한 이후 searchResult가 다시 계산되지 않는다. 이 문제를 해결하려면 pinia 패키지의 storeToRefs()로 pizzasStore에서 pizzas를 추출하고 반응성을 유지한 채 useSearch()로 전달해야 한다.
+
+```jsx
+
+```
+
+## 9.4 장바구니 저장소 생성
+Cart 저장소는 다음과 같은 프로퍼티를 담고 있어야 한다.
+
+- 장바구니에 추가된 items 목록. 각각의 데이터는 피자 id와 quantity를 포함한다.
+- 장바구니 항목들의 total 프로퍼티
+- 장바구니에 항목을 추가하기 위한 add 메서드
+
+cart 저장소를 생성하려면 src/stores/cart.ts 파일을 추가하고 아래 코드를 작성한다. 
+
+```tsx
+import {defineStore} from 'pinia'
+import {reactive, computed} from 'vue'
+
+type CartItem = {
+    id: string;
+    quantity: number;
+}
+
+export const useCartStore = defineStore('cart',() =>{
+    const items = reactive<CartItem[]>([]);
+
+    const total =computed(()=>{
+        return items.reduce((acc, item) => {
+            return acc + item.quantity;
+        }, 0)
+    })
+    
+    const add = (item: CartItem) => {
+        const index =items.findIndex(i => i.id === item.id)
+        if(index > -1){
+            items[index].quantity += item.quantity;
+        }else{
+            items.push(item)
+        }
+        return{
+            items,
+            total,
+            add
+        }
+    }
+})
+```
+
+- cartItem 타입을 정의한다.
+- items 상태를 빈 배열로 초기화한다.
+- 장바구니의 전체 항목을 계산하는 total getter를 생성한다.
+- 장바구니에 아이템을 추가하는 add 메서드를 생성한다. 해당 아이템이 이미 장바구니에 있을 경우 수량을 더한다.
+
+## 9.5 컴포넌트에서 장바구니 저장소 사용하기
+
+장바구니에 항목을 표시하는 컴포넌트를 아래와 같이 작성한다.
+
+```tsx
+<template>
+    <div class="cart">
+        <span class="cart__total">Cart : {{ cart.total }}</span>
+    </div>
+</template>
+<script setup lang="ts">
+    import { useCartStore } from '@/stores/ch09/cart';
+    const cart = useCartStore();
+</script>
+<style scoped>
+    .cart__total{
+        cursor: pointer;
+        text-decoration: underline;
+    }
+</style>
+```
+##  9.6 피자 갤러리에 장바구니 기능 추가하기
+
+PizzasCard에서는 새로운 버튼을 추가한다. 이 버튼에 click 이벤트를 걸고 핸들러를 통해 카트에 재고를 추가한다.
+
+```tsx
+<template>
+  <article class="pizza--details-wrapper">
+    <img :src="pizza.image" :alt="pizza.title" height="200" width="300" />
+    <p>{{ pizza.description }}</p>
+    <div class="pizza--inventory">
+      <div class="pizza--inventory-stock">Stock: {{ pizza.quantity || 0 }}</div>
+      <div class="pizza--inventory-price">$ {{ pizza.price }}</div>
+      <span v-if="isInCart">In cart</span>
+    </div>
+    <button class="pizza--add" @click="addToCart">Add to cart</button>
+  </article>
+</template>
+
+<script setup lang="ts">
+import { useCartStore } from '@/stores/ch09/cart'
+import type { Pizza } from '@/types/ch08/Pizza'
+import type { PropType } from 'vue'
+import {computed} from 'vue';
+
+const props = defineProps({
+  pizza: {
+    type: Object as PropType<Pizza>,
+    required: true,
+  },
+});
+
+const cart = useCartStore()
+const addToCart= () =>{
+  cart.add({id: props.pizza.id, quantity: 1})
+};
+
+const isInCart = computed(():boolean =>{
+  return !!cart.items.find((item) => item.id == props.pizza.id);
+})
+</script>
+
+```
+
+해당 피자가 이미 장바구니에 있으면 피자 카드에 in cart 상태가 표시된다.
+
+```tsx
+<template>
+  <article class="pizza--details-wrapper">
+    <img :src="pizza.image" :alt="pizza.title" height="200" width="300" />
+    <p>{{ pizza.description }}</p>
+    <div class="pizza--inventory">
+      <div class="pizza--inventory-stock">Stock: {{ pizza.quantity || 0 }}</div>
+      <div class="pizza--inventory-price">$ {{ pizza.price }}</div>
+      <span v-if="isInCart">In cart</span>
+    </div>
+    <button class="pizza--add" @click="addToCart">Add to cart</button>
+  </article>
+</template>
+
+<script setup lang="ts">
+import { useCartStore } from '@/stores/ch09/cart'
+import type { Pizza } from '@/types/ch08/Pizza'
+import type { PropType } from 'vue'
+import {computed} from 'vue';
+
+const props = defineProps({
+  pizza: {
+    type: Object as PropType<Pizza>,
+    required: true,
+  },
+});
+
+const cart = useCartStore()
+const addToCart= () =>{
+  cart.add({id: props.pizza.id, quantity: 1})
+};
+
+const isInCart = computed(():boolean =>{
+  return !!cart.items.find((item) => item.id == props.pizza.id);
+})
+</script>
+```
+
+아직까지 Cart 컴포넌트는 장바구니의 전체 항목 수만 표시한다. 대부분의 사용자는 이 정보만으로 자신이 추가한 항목을 파악하기 어렵다. 상세 기능을 다음 절에 구현해보자
+## 9.7 액션으로 장바구니 목록 표시하기
+Cart 컴포넌트에 장바구니 목록 표시 영역을 추가하고 showCartDetails 변수를 만들어 화면 노출 여부를 제어 해보자. 
+
+```tsx
+<template>
+    <div class="cart">
+        <span class="cart__total" @click="showCartDetails = !showCartDetails" >Cart : {{ cart.total }}</span>
+        <ul class="cart__list" v-show="showCartDetails">
+            <li class="cart__list-item" v-for="item in cart.items" :key="item.id">
+                <span>Id : {{ item.id }}</span>
+                <span>Quantity: {{ item.quantity }}</span>
+            </li>
+        </ul>
+    </div>
+</template>
+<script setup lang="ts">
+    import { useCartStore } from '@/stores/ch09/cart';
+    import {ref} from 'vue';
+    const cart = useCartStore();
+    const showCartDetails = ref(false);
+
+</script>
+```
